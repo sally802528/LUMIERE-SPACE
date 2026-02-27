@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Lumière Gallery - Interactive Fixed</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: sans-serif; }
+        #canvas-container { width: 100%; height: 100%; }
+        
+        /* 初始載入介面 */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 200; }
+        
+        /* 觀賞模式切換遮罩 */
+        #start-overlay { 
+            position: absolute; top:0; left:0; width:100%; height:100%; 
+            background: rgba(0,0,0,0.5); color: white; 
+            display: none; /* 初始隱藏 */
+            flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 150; cursor: pointer; 
+        }
+        
+        .btn { background: #000; color: #fff; padding: 15px 40px; border: none; cursor: pointer; font-size: 1.2em; border-radius: 4px; }
+        .hint { margin-top: 15px; color: #aaa; font-size: 0.9em; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <div style="text-align: center;">
+            <h1 style="letter-spacing: 8px;">LUMIÈRE SPACE GALLERY</h1>
+            <p>將畫作有如美術館一般展示</p>
+            <label for="file-input" class="btn">載入圖片資料夾</label>
+            <input type="file" id="file-input" webkitdirectory directory multiple style="display:none;">
+        </div>
+    </div>
+
+    <div id="start-overlay">
+        <h2 style="font-size: 2em; letter-spacing: 5px;">點擊繼續觀賞</h2>
+        <p class="hint">WASD 移動 | 滑鼠控制視角 | ESC 暫停</p>
+    </div>
+
+    <script>
+        let scene, camera, renderer, player, pitch;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        const ROOM = { w: 30, d: 40, h: 12 };
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x111111);
+
+            player = new THREE.Object3D();
+            player.position.set(0, 5.5, 5); 
+            scene.add(player);
+
+            pitch = new THREE.Object3D();
+            player.add(pitch);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+            pitch.add(camera);
+
+            buildGallery();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding; 
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            setupInteractiveControls();
+            document.getElementById('file-input').addEventListener('change', handleFiles);
+        }
+
+        function buildGallery() {
+            const loader = new THREE.TextureLoader();
+            
+            // 地板
+            const floorTex = loader.load('https://threejs.org/examples/textures/hardwood2_diffuse.jpg');
+            floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+            floorTex.repeat.set(5, 8);
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(ROOM.w, ROOM.d),
+                new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // 牆壁 (純白冷調)
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
+            const createW = (w, h, x, z, ry) => {
+                const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
+                m.position.set(x, h/2, z);
+                m.rotation.y = ry;
+                scene.add(m);
+            };
+            createW(ROOM.w, ROOM.h, 0, -ROOM.d/2, 0);
+            createW(ROOM.d, ROOM.h, ROOM.w/2, 0, -Math.PI/2);
+            createW(ROOM.w, ROOM.h, 0, ROOM.d/2, Math.PI);
+            createW(ROOM.d, ROOM.h, -ROOM.w/2, 0, Math.PI/2);
+
+            // 黑色深邃天花板
+            const ceiling = new THREE.Mesh(
+                new THREE.PlaneGeometry(ROOM.w, ROOM.d),
+                new THREE.MeshStandardMaterial({ color: 0x050505 })
+            );
+            ceiling.position.y = ROOM.h;
+            ceiling.rotation.x = Math.PI / 2;
+            scene.add(ceiling);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        }
+
+        function createLampAndSpotlight(targetMesh) {
+            const group = new THREE.Group();
+            // 從牆面向室內偏移 3.5 米，天花板下方
+            const lampPos = new THREE.Vector3(0, ROOM.h - 0.3, 3.5);
+            
+            const lampBody = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.1, 0.12, 0.4),
+                new THREE.MeshStandardMaterial({ color: 0x222222 })
+            );
+            lampBody.position.copy(lampPos);
+            lampBody.rotation.x = -Math.PI / 4; 
+            group.add(lampBody);
+
+            const spot = new THREE.SpotLight(0xffffff, 1.4, 25, Math.PI/6, 0.5);
+            spot.position.copy(lampPos);
+            spot.target = targetMesh;
+            group.add(spot);
+
+            return group;
+        }
+
+        async function handleFiles(e) {
+            const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+            if(files.length === 0) return;
+
+            const walls = [
+                { axis: 'x', start: -13, limit: 13, pos: {x:0, z:-ROOM.d/2 + 0.05}, rot: 0 },
+                { axis: 'z', start: -18, limit: 18, pos: {x:ROOM.w/2 - 0.05, z:0}, rot: -Math.PI/2 },
+                { axis: 'x', start: -13, limit: 13, pos: {x:0, z:ROOM.d/2 - 0.05}, rot: Math.PI },
+                { axis: 'z', start: -18, limit: 18, pos: {x:-ROOM.w/2 + 0.05, z:0}, rot: Math.PI/2 }
+            ];
+
+            let wallIdx = 0, cursor = walls[0].start;
+            const loader = new THREE.TextureLoader();
+
+            for (const file of files) {
+                const tex = await loader.loadAsync(URL.createObjectURL(file));
+                tex.encoding = THREE.sRGBEncoding;
+
+                const ratio = tex.image.width / tex.image.height;
+                const h = 4.5, w = h * ratio, gap = 2.8;
+
+                if (cursor + w > walls[wallIdx].limit) {
+                    wallIdx++; if (wallIdx >= walls.length) break;
+                    cursor = walls[wallIdx].start;
+                }
+
+                const wall = walls[wallIdx];
+                const artGroup = new THREE.Group();
+
+                // 畫框
+                const frame = new THREE.Mesh(
+                    new THREE.BoxGeometry(w + 0.2, h + 0.2, 0.1),
+                    new THREE.MeshStandardMaterial({ color: 0x000000 })
+                );
+                artGroup.add(frame);
+
+                // 畫布：貼在畫框前緣 (z=0.051)，杜絕重疊閃爍
+                const canvas = new THREE.Mesh(
+                    new THREE.PlaneGeometry(w, h),
+                    new THREE.MeshBasicMaterial({ map: tex }) 
+                );
+                canvas.position.z = 0.051; 
+                artGroup.add(canvas);
+
+                artGroup.add(createLampAndSpotlight(canvas));
+
+                const center = cursor + w/2;
+                artGroup.position.set(wall.pos.x, 5.5, wall.pos.z);
+                if (wall.axis === 'x') artGroup.position.x = center; else artGroup.position.z = center;
+                artGroup.rotation.y = wall.rot;
+
+                scene.add(artGroup);
+                cursor += w + gap;
+            }
+
+            document.getElementById('ui-layer').style.display = 'none';
+            document.getElementById('start-overlay').style.display = 'flex';
+        }
+
+        function setupInteractiveControls() {
+            const startOverlay = document.getElementById('start-overlay');
+            
+            // 點擊遮罩進入鎖定模式
+            startOverlay.addEventListener('click', () => {
+                document.body.requestPointerLock();
+            });
+
+            // 監聽鎖定狀態變更
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement === document.body) {
+                    startOverlay.style.display = 'none';
+                } else {
+                    startOverlay.style.display = 'flex';
+                }
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (document.pointerLockElement) {
+                    player.rotation.y -= e.movementX * 0.002;
+                    pitch.rotation.x -= e.movementY * 0.002;
+                    pitch.rotation.x = Math.max(-1.5, Math.min(1.5, pitch.rotation.x));
+                }
+            });
+
+            const key = (e, v) => {
+                if(e.code==='KeyW') moveForward=v; if(e.code==='KeyS') moveBackward=v;
+                if(e.code==='KeyA') moveLeft=v; if(e.code==='KeyD') moveRight=v;
+            };
+            document.addEventListener('keydown', e => key(e, true));
+            document.addEventListener('keyup', e => key(e, false));
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (document.pointerLockElement) {
+                const dir = new THREE.Vector3();
+                camera.getWorldDirection(dir);
+                dir.y = 0; dir.normalize();
+                const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0,1,0));
+                
+                const speed = 0.16;
+                if(moveForward) player.position.addScaledVector(dir, speed);
+                if(moveBackward) player.position.addScaledVector(dir, -speed);
+                if(moveLeft) player.position.addScaledVector(side, -speed);
+                if(moveRight) player.position.addScaledVector(side, speed);
+
+                // 物理碰撞邊界
+                const p = 1.8;
+                player.position.x = Math.max(-ROOM.w/2+p, Math.min(ROOM.w/2-p, player.position.x));
+                player.position.z = Math.max(-ROOM.d/2+p, Math.min(ROOM.d/2-p, player.position.z));
+            }
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
