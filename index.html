@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Lumière Elite - Replay Logic Optimized</title>
+    <title>Lumière Space</title>
     <style>
         :root {
             --accent-color: rgba(255, 255, 255, 0.9);
@@ -85,7 +85,7 @@
 
     <div id="ui-layer">
         <div style="text-align: center;">
-            <h1 style="font-weight: 100; margin-bottom: 60px; color: rgba(255,255,255,0.9);">LUMIÈRE ELITE</h1>
+            <h1 style="font-weight: 100; margin-bottom: 60px; color: rgba(255,255,255,0.9);">LUMIÈRE SPACE</h1>
             <label for="file-input" class="glass-btn" data-lang-key="enterGallery">進入展覽</label>
             <input type="file" id="file-input" webkitdirectory directory multiple style="display:none;">
         </div>
@@ -106,14 +106,14 @@
         <div data-lang-key="systemOptics" style="font-size: 10px; letter-spacing: 6px; color: #fff; margin-bottom: 25px;">系統選項</div>
         <div class="control-group"><label data-lang-key="movementSpeed">移動速度</label><input type="range" id="speed-slider" min="0.1" max="1.0" step="0.05" value="0.38"></div>
         <div class="control-group"><label data-lang-key="jumpImpulse">跳躍力道</label><input type="range" id="jump-slider" min="0.1" max="0.6" step="0.05" value="0.2"></div>
-        <div class="control-group"><label data-lang-key="footstepVolume">腳步音量</label><input type="range" id="footstep-slider" min="0" max="1" step="0.1" value="1.0"></div>
+        <div class="control-group"><label data-lang-key="footstepVolume">腳步聲音量</label><input type="range" id="footstep-slider" min="0" max="1" step="0.1" value="1.0"></div>
         <div class="control-group"><label data-lang-key="ambienceVolume">環境音量</label><input type="range" id="ambience-slider" min="0" max="1" step="0.1" value="0.5"></div>
         <div class="control-group"><label data-lang-key="musicVolume">音樂音量</label><input type="range" id="music-slider" min="0" max="1" step="0.1" value="0.3"></div>
         <div class="control-group"><label data-lang-key="viewPerspective">視角廣度 (FOV)</label><input type="range" id="fov-slider" min="40" max="120" step="1" value="60"></div>
         <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
         <div class="control-group"><label data-lang-key="ambientLight">環境光</label><input type="range" id="ambient-slider" min="0" max="2" step="0.1" value="0.4"></div>
-        <div class="control-group"><label data-lang-key="spotlightPower">聚光燈強度</label><input type="range" id="spot-slider" min="0" max="100" step="5" value="35"></div>
-        <div class="control-group"><label data-lang-key="focusScale">光圈大小</label><input type="range" id="spot-angle-slider" min="0.1" max="1.2" step="0.05" value="0.7"></div>
+        <div class="control-group"><label data-lang-key="spotlightPower">射燈強度</label><input type="range" id="spot-slider" min="0" max="100" step="5" value="35"></div>
+        <div class="control-group"><label data-lang-key="focusScale">射燈光圈大小</label><input type="range" id="spot-angle-slider" min="0.1" max="1.2" step="0.05" value="0.7"></div>
         <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
         <div class="control-group" style="display:flex; flex-wrap: wrap; gap: 15px;">
             <label data-lang-key="lights" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="spot-toggle" checked> 燈光</label>
