@@ -73,7 +73,7 @@ LUMIERE-SPACE 承諾尊重您的隱私。由於本站完全在瀏覽器本地端
 --- 
 ## 開發人員
 * Google Gemini 主要開發者
-* Qimei Technology Studio 維護與測試工作與創意發想總監
+* Qimei Technology Studio 設計總監
 * DWEP Studio 副測試員
 * 臺灣團隊 AI神隊友
 ---
