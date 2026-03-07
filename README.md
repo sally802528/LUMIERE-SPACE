@@ -1,4 +1,4 @@
-# LUMIERE-SPACE (流光空間) 模擬畫廊 🖼️
+# LUMIERE-SPACE (流光空間) 🖼️
 
 > **將畫作有如美術館一般展示。**
 
@@ -85,7 +85,7 @@ LUMIERE-SPACE 承諾尊重您的隱私。本站任何導入資料，都是本地
 
 本站採用網頁形式呈現，遊戲操作目前僅對桌面端優化，不支援手機操作
 支援的格式為JPG、JPEG、PNG、MP4
-並支援的編碼，以瀏覽器支援的編碼能力為主<br>
+並支援的編碼，以瀏覽器支援的編碼能力為主<br>避免導入過大的檔案，如:4k高清影片等，以避免導致畫面卡頓而影響體驗
 <br>你必須連接網路，才可以正常取得必要貼圖，與音樂播放，不過請放心，你的資料會保持本地運行
 
 ---
@@ -98,7 +98,7 @@ LUMIERE-SPACE 承諾尊重您的隱私。本站任何導入資料，都是本地
 
 ## 📜 許可證
 
-<a href="https://sally802528.github.io/LUMIERE-SPACE/ttps://example.com">LUMIERE-SPACE</a> © 2026 by <a href="https://qimei.framer.website/">Qimei Technology Studio</a> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International</a><br><br><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+<a href="https://sally802528.github.io/LUMIERE-SPACE/">LUMIERE-SPACE</a> © 2026 by <a href="https://qimei.framer.website/">Qimei Technology Studio</a> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International</a><br><br><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
 
 ---
 
