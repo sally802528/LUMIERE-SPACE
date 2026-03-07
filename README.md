@@ -1,4 +1,4 @@
-<img width="1163" height="260" alt="image" src="https://github.com/user-attachments/assets/ccf5a4cf-87d4-496e-ba66-c4d1d85b8925" /># LUMIERE-SPACE (流光空間) 模擬畫廊 🖼️
+# LUMIERE-SPACE (流光空間) 模擬畫廊 🖼️
 
 > **將畫作有如美術館一般展示。**
 
