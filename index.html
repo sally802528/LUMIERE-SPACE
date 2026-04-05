@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Lumière Space</title>
+    <title>Lumière Space v1.12</title>
     <style>
         :root {
             --accent-color: rgba(255, 255, 255, 0.9);
@@ -10,7 +10,7 @@
             --border-glass: rgba(255, 255, 255, 0.1);
         }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Optima', 'Segoe UI', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Optima', 'Segoe UI', sans-serif; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
         #canvas-container { width: 100%; height: 100%; }
         
         #fps-counter { position: absolute; top: 20px; left: 20px; color: var(--accent-color); font-family: 'Courier New', monospace; font-size: 11px; z-index: 2500; display: none; letter-spacing: 2px; padding: 6px 12px; background: var(--bg-glass); backdrop-filter: blur(10px); }
@@ -43,7 +43,7 @@
         #interaction-prompt { position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); color: white; font-size: 11px; letter-spacing: 4px; background: rgba(0,0,0,0.8); padding: 12px 25px; display: none; z-index: 1000; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); text-transform: uppercase; }
 
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 2000; color: white; transition: opacity 0.8s ease; }
-        .glass-btn { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid var(--border-glass); color: var(--accent-color); padding: 12px 35px; cursor: pointer; letter-spacing: 5px; font-size: 11px; text-transform: uppercase; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .glass-btn { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid var(--border-glass); color: var(--accent-color); padding: 12px 35px; cursor: pointer; letter-spacing: 5px; font-size: 11px; text-transform: uppercase; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: flex; align-items: center; justify-content: center; outline: none; pointer-events: auto; min-width: 120px; z-index: 3100; }
         .glass-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 25px rgba(255, 255, 255, 0.2); transform: translateY(-2px) scale(1.02); text-shadow: 0 0 8px rgba(255,255,255,0.6); }
         .glass-btn:active { transform: translateY(1px) scale(0.98); }
 
@@ -56,7 +56,24 @@
         .control-group { margin-bottom: 20px; }
         .control-group label { display: block; font-size: 9px; margin-bottom: 8px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; }
         .control-group input[type="range"] { width: 100%; cursor: pointer; }
-        #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: #000; display: none; align-items: center; justify-content: center; z-index: 3000; opacity: 0; transition: opacity 1s; color: white; letter-spacing: 15px; font-weight: 100; }
+        #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: #000; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; z-index: 3000; opacity: 0; transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1); color: white; letter-spacing: 15px; font-weight: 100; }
+
+        /* 錯誤彈窗樣式 */
+        #error-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(20,0,0,0.6); backdrop-filter: blur(30px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.4s ease-out; }
+        .error-container { max-width: 500px; background: var(--bg-glass); border: 1px solid rgba(255,50,50,0.2); padding: 50px; text-align: center; backdrop-filter: blur(20px); box-shadow: 0 0 50px rgba(255,0,0,0.1); }
+
+        /* 免責聲明彈窗樣式 */
+        #disclaimer-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(40px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 7000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.6s ease-out; }
+        .disclaimer-container { max-width: 600px; background: var(--bg-glass); border: 1px solid var(--border-glass); padding: 50px; text-align: center; backdrop-filter: blur(20px); }
+
+        /* 說明介面樣式 */
+        #help-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(40px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.6s ease-out; }
+        .help-container { max-width: 700px; width: 100%; overflow-y: auto; text-align: left; scrollbar-width: none; }
+        .help-container::-webkit-scrollbar { display: none; }
+        .help-section { margin-bottom: 35px; }
+        .help-title { font-size: 14px; letter-spacing: 4px; color: var(--accent-color); border-bottom: 1px solid var(--border-glass); padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
+        .help-grid { display: grid; grid-template-columns: 140px 1fr; gap: 12px; font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.7); }
+        .help-key { color: white; font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px; display: inline-block; width: fit-content; }
 
         @keyframes scatter-reveal { 
             0% { letter-spacing: -5px; opacity: 0; filter: blur(20px); transform: scale(0.9); } 
@@ -84,15 +101,18 @@
     <div id="video-timer">00:00 / 00:00</div>
 
     <div id="ui-layer">
-        <div style="text-align: center;">
+        <div style="text-align: center; pointer-events: none;">
             <h1 style="font-weight: 100; margin-bottom: 60px; color: rgba(255,255,255,0.9);">LUMIÈRE SPACE</h1>
-            <label for="file-input" class="glass-btn" data-lang-key="enterGallery">進入展覽</label>
-            <input type="file" id="file-input" webkitdirectory directory multiple style="display:none;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; pointer-events: auto;">
+                <label for="file-input" class="glass-btn" data-lang-key="enterGallery">進入展覽</label>
+                <input type="file" id="file-input" webkitdirectory directory multiple style="display:none;">
+            </div>
         </div>
     </div>
 
-    <div id="floor-control" class="glass-btn" data-lang-key="floors" style="position: absolute; top: 40px; right: 40px; z-index: 1500; display: none;">樓層 (E)</div>
-    <div id="settings-trigger" class="glass-btn" data-lang-key="engine" style="position: absolute; bottom: 40px; right: 40px; z-index: 1500; opacity: 0.5;">設定 (U)</div>
+    <button id="help-trigger" class="glass-btn" data-lang-key="help" style="position: absolute; bottom: 40px; left: 40px; z-index: 2500;">說明</button>
+    <button id="floor-control" class="glass-btn" data-lang-key="floors" style="position: absolute; top: 40px; right: 40px; z-index: 2500; display: none;">樓層 (E)</button>
+    <button id="settings-trigger" class="glass-btn" data-lang-key="engine" style="position: absolute; bottom: 40px; right: 40px; z-index: 2500; opacity: 0.7; display: none;">設定 (U)</button>
 
     <div id="settings-panel">
         <div class="control-group">
@@ -109,6 +129,7 @@
         <div class="control-group"><label data-lang-key="footstepVolume">腳步聲音量</label><input type="range" id="footstep-slider" min="0" max="1" step="0.1" value="1.0"></div>
         <div class="control-group"><label data-lang-key="ambienceVolume">環境音量</label><input type="range" id="ambience-slider" min="0" max="1" step="0.1" value="0.5"></div>
         <div class="control-group"><label data-lang-key="musicVolume">音樂音量</label><input type="range" id="music-slider" min="0" max="1" step="0.1" value="0.3"></div>
+        <div class="control-group"><label data-lang-key="videoVolume">影片音量</label><input type="range" id="video-slider" min="0" max="1" step="0.1" value="0.8"></div>
         <div class="control-group"><label data-lang-key="viewPerspective">視角廣度 (FOV)</label><input type="range" id="fov-slider" min="40" max="120" step="1" value="60"></div>
         <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
         <div class="control-group"><label data-lang-key="ambientLight">環境光</label><input type="range" id="ambient-slider" min="0" max="2" step="0.1" value="0.4"></div>
@@ -126,18 +147,83 @@
     </div>
 
     <div id="start-overlay">
-        <h2 data-lang-key="pause">暫停</h2>
+        <h2 data-lang-key="pause" style="pointer-events: none;">暫停</h2>
         <button class="glass-btn" id="resume-btn" data-lang-key="resumeSession" style="padding: 15px 60px; font-size: 14px;">返回</button>
+        <p data-lang-key="credits" style="margin-top: 45px; font-size: 10px; opacity: 0.5; letter-spacing: 2px;">Qimei Technology Studio 製作 創用CC BY-NC 4.0授權</p>
     </div>
 
-    <div id="loading-overlay" data-lang-key="curatingArtworks">策展中...</div>
+    <div id="help-overlay">
+        <div class="help-container">
+            <div class="help-section">
+                <div class="help-title" data-lang-key="controlsTitle">操作控制</div>
+                <div class="help-grid">
+                    <span class="help-key">WASD</span> <span data-lang-key="helpWASD">移動角色</span>
+                    <span class="help-key">SPACE</span> <span data-lang-key="helpSpace">跳躍 / 坐下 / 站起</span>
+                    <span class="help-key">MOUSE</span> <span data-lang-key="helpMouse">環視四周</span>
+                    <span class="help-key">U</span> <span data-lang-key="helpU">開啟設定選單</span>
+                    <span class="help-key">E</span> <span data-lang-key="helpE">切換展覽樓層</span>
+                    <span class="help-key">Y</span> <span data-lang-key="helpY">靜音開關</span>
+                    <span class="help-key">F</span> <span data-lang-key="helpF">手電筒開關</span>
+                    <span class="help-key">C</span> <span data-lang-key="helpC">縮放視角 (望遠鏡)</span>
+                    <span class="help-key">C + Scroll wheel</span> <span data-lang-key="helpCS">縮放視角 (望遠鏡)，並調整焦距</span>
+                    <span class="help-key">← / →</span> <span data-lang-key="helpArrows">影片倒帶 / 快進</span>
+                </div>
+            </div>
+            <div class="help-section">
+                <div class="help-title" data-lang-key="onlineTitle">線上圖庫連接教學</div>
+                <div style="font-size: 11px; line-height: 1.8; color: rgba(255,255,255,0.7); letter-spacing: 1px;">
+                    <p data-lang-key="onlineDesc">您可以透過網址參數自動載入 GitHub 上的圖庫。格式如下：</p>
+                    <p style="color: white; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace;">/?load=使用者名稱/儲存庫名稱/</p>
+                    <p style="color: white; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace;">範例:/?load=sally802528/TEST_online_LS/</p>
+                    <p data-lang-key="onlineStep">請確保儲存庫根目錄包含一個 <span style="color:white">manifest.json</span> 檔案，其中定義了所有媒體資源的連結與類型。</p>
+                </div>
+            </div>
+            <div class="help-section">
+                <div class="help-title" data-lang-key="tutorialTitle">使用教學</div>
+                <div style="font-size: 11px; line-height: 1.8; color: rgba(255,255,255,0.7); letter-spacing: 1px;" data-lang-key="tutorialDesc">
+                    進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。
+                </div>
+            </div>
+        </div>
+        <button class="glass-btn" onclick="closeHelp()" data-lang-key="resumeSession" style="margin-top: 20px;">返回</button>
+    </div>
+
+    <div id="error-overlay">
+        <div class="error-container">
+            <div id="error-message" style="margin-bottom: 40px; font-size: 13px; letter-spacing: 2px; line-height: 1.8; opacity: 0.9;"></div>
+            <div style="display: flex; gap: 20px; justify-content: center;">
+                <button class="glass-btn" id="error-retry-btn" data-lang-key="errorRetry">重新載入</button>
+                <button class="glass-btn" onclick="closeError()" data-lang-key="errorClose">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="disclaimer-overlay">
+        <div class="disclaimer-container">
+            <div style="font-size: 10px; color: #ffaa00; letter-spacing: 5px; margin-bottom: 25px;">LEGAL NOTICE</div>
+            <div id="disclaimer-text" style="font-size: 13px; line-height: 2; margin-bottom: 40px; text-align: justify; letter-spacing: 1px; opacity: 0.9;" data-lang-key="onlineDisclaimer"></div>
+            <div style="display: flex; gap: 20px; justify-content: center;">
+                <button class="glass-btn" id="disclaimer-confirm-btn" data-lang-key="confirmEnter">確定進入</button>
+                <button class="glass-btn" id="disclaimer-cancel-btn" data-lang-key="errorClose">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 30px;">
+            <div data-lang-key="curatingArtworks">策展中...</div>
+            <div style="width: 200px; height: 1px; background: rgba(255,255,255,0.1); position: relative; overflow: hidden;">
+                <div id="loading-progress" style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #fff; transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
         let scene, camera, renderer, player, pitch, raycaster = new THREE.Raycaster();
         let ambientLight, flashlight, spotLights = [], selectableArt = [];
         let floors = [], currentFloorIdx = 0;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-        let canJump = true, velocityY = 0, isLoading = false, isPaused = true, isSettingsOpen = false;
+        let canJump = true, velocityY = 0, isLoading = false, isPaused = true, isSettingsOpen = false, isHelpOpen = false;
         let lastTime = performance.now(), frameCount = 0;
 
         let isZooming = false, targetZoomFov = 25, currentVisualFov = 60;
@@ -152,6 +238,12 @@
         let preSittingPos = new THREE.Vector3(), preSittingRotY = 0, targetSittingRotY = 0;
         let currentLang = 'en'; // Default to English
         let focusHideTimer = null, lastPointedCanvas = null, isReticleFocusHidden = false;
+        let lastFailedUrl = null;
+        // 效能優化用變數
+        const _viewDir = new THREE.Vector3();
+        const _tempVec = new THREE.Vector3();
+        let lastVideoSearchTime = 0;
+        let lastVideoTimeUpdate = 0;
 
         const translations = {
             en: {
@@ -162,21 +254,45 @@
                 focusScale: "Focus Scale", lights: "Lights", reticle: "Reticle", muteAll: "Mute Audio (Y)", fpsCounter: "FPS Counter",
                 torch: "Torch (F)", restoreDefault: "Restore Default", pause: "PAUSE", resumeSession: "Resume Session",
                 curatingArtworks: "CURATING ARTWORKS...", pressSpaceToSit: "PRESS [SPACE] TO REST",
-                pressSpaceToStand: "PRESS [SPACE] TO STAND UP", language: "Language"
+                pressSpaceToStand: "PRESS [SPACE] TO STAND UP", language: "Language",
+                videoVolume: "Video Volume", errorRetry: "Retry", errorClose: "Close",
+                help: "HELP", helpTitle: "INSTRUCTIONS", controlsTitle: "CONTROLS", tutorialTitle: "TUTORIAL", onlineTitle: "ONLINE MODE",
+                confirmEnter: "CONFIRM",
+                onlineDisclaimer: "You are about to enter a public gallery created via the network. Note! The content of this gallery does not belong to Qimei Technology Studio. Since the database is not controlled by this studio, the copyright and legal responsibilities for the content displayed in the gallery are solely the responsibility of the creator of the data source repository. If the content involves infringement or legal concerns, please contact the content provider directly. Are you sure you want to enter the public gallery?",
+                errorManifestNotFound: "Manifest not found. Ensure 'manifest.json' exists in the root of your repository (main or master branch).",
+                errorInvalidFormat: "Invalid manifest format. It must be a JSON array.",
+                errorFetchFailed: "Network error or blocked by CORS. Verify the link is accessible.",
+                onlineDesc: "Load external galleries via URL parameters:", onlineStep: "Ensure the repository contains a 'manifest.json' file with media links.",
+                helpWASD: "Movement", helpSpace: "Jump / Sit / Stand", helpMouse: "Look Around", helpU: "Settings Menu", helpE: "Floor Selection", 
+                helpY: "Audio Toggle", helpF: "Flashlight", helpC: "Zoom View",helpCS: "Adjust focus", helpArrows: "Video Seek / Playback",
+                tutorialDesc: "Navigate freely in the gallery. Point at artworks to auto-play videos with audio. Hold arrows to fast-forward or rewind. Press Space near the bench to rest.",
+                credits: "Produced by Qimei Technology Studio | CC BY-NC 4.0 Licensed"
             },
             zh: {
                 enterGallery: "進入展覽", floors: "樓層 (E)", engine: "設定 (U)",
                 systemOptics: "系統選項", movementSpeed: "移動速度", jumpImpulse: "跳躍力道", 
-                footstepVolume: "腳步音量", ambienceVolume: "環境音量", musicVolume: "音樂音量",
+                footstepVolume: "腳步音量", ambienceVolume: "環境音量", musicVolume: "音樂音量", videoVolume: "影片音量",
                 viewPerspective: "視角廣度 (FOV)", ambientLight: "環境光", spotlightPower: "聚光燈強度",
                 focusScale: "光圈大小", lights: "燈光", reticle: "準星", muteAll: "靜音 (Y)", fpsCounter: "幀數顯示",
                 torch: "手電筒 (F)", restoreDefault: "恢復預設值", pause: "暫停", resumeSession: "返回",
                 curatingArtworks: "策展中...", pressSpaceToSit: "按下 [SPACE] 休息",
-                pressSpaceToStand: "按下 [SPACE] 站起", language: "語言"
+                pressSpaceToStand: "按下 [SPACE] 站起", language: "語言",
+                help: "說明", helpTitle: "使用說明", controlsTitle: "操作控制", tutorialTitle: "使用教學", onlineTitle: "線上圖庫連接",
+                errorRetry: "重新載入", errorClose: "關閉", confirmEnter: "確定進入",
+                onlineDisclaimer: "你即將進入由網路建立的公開展場。注意!本展場內容不屬於Qimei Technology Studio 所有，由於資料庫不受本工作室管制， 展場內展出內容之版權與法律責任，概由該資料來源儲存庫之建立者自行承擔。若內容涉及侵權或違法之虞，請逕行聯繫內容提供者。你確定要進入公開展場嗎?",
+                errorManifestNotFound: "找不到設定檔。請確保儲存庫根目錄（main 或 master 分支）中存在 'manifest.json'。",
+                errorInvalidFormat: "設定檔格式錯誤。必須為 JSON 陣列。",
+                errorFetchFailed: "網路連線錯誤或被 CORS 阻擋。請確認連結是否公開可用。",
+                onlineDesc: "您可以透過網址參數自動載入 GitHub 上的圖庫。格式如下：", onlineStep: "請確保儲存庫根目錄包含一個 manifest.json 檔案，其中定義了所有媒體資源。",
+                helpWASD: "移動角色", helpSpace: "跳躍 / 坐下 / 站起", helpMouse: "環視四周", helpU: "開啟設定選單", helpE: "切換樓層", 
+                helpY: "靜音開關", helpF: "手電筒開關", helpC: "縮放視角 (望遠鏡)", helpArrows: "影片倒帶 / 快進",
+                tutorialDesc: "進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。",
+                credits: "Qimei Technology Studio 製作 創用CC BY-NC 4.0授權"
             }
         };
 
-        const state = { speed: 0.38, jumpForce: 0.2, footstepVolume: 1.0, ambienceVolume: 0.5, musicVolume: 0.3, fov: 60, ambientIntensity: 0.4, spotIntensity: 35, spotAngle: 0.7, spotVisible: true, reticleVisible: true, flashlightOn: false, fpsVisible: false, audioMuted: false };
+        const state = { speed: 0.38, jumpForce: 0.2, footstepVolume: 1.0, ambienceVolume: 0.5, musicVolume: 0.3, videoVolume: 0.8, fov: 60, ambientIntensity: 0.4, spotIntensity: 35, spotAngle: 0.7, spotVisible: true, reticleVisible: true, flashlightOn: false, fpsVisible: false, audioMuted: false };
+        const DEFAULT_LOAD_URL = ''; // 填入 manifest JSON 的直鏈，即可實現開網頁自動策展，確保「簡單完成」
         const defaultState = { ...state };
         const ROOM = { w: 100, d: 120, h: 22 }; 
         const mediaObjects = []; 
@@ -239,6 +355,8 @@
             applyLanguage(currentLang); // Set initial language
             document.getElementById('file-input').addEventListener('change', handleFiles);
             window.addEventListener('resize', onWindowResize);
+            
+            setTimeout(checkOnlineMode, 100); // 確保 UI 初始化後執行自動載入
             
             document.getElementById('canvas-container').addEventListener('click', () => {
                 if (!isLoading && !isPaused && !isSettingsOpen) {
@@ -334,7 +452,7 @@
             const marbleUrl = 'https://sally802528.github.io/LUMIERE-SPACE/Poliigon_StoneQuartzite_8060_BaseColor.jpg';
             const marbleTex = loader.load(marbleUrl);
             marbleTex.wrapS = marbleTex.wrapT = THREE.RepeatWrapping; marbleTex.repeat.set(2, 1);
-            const marbleMat = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.1, metalness: 0.05, emissive: 0xf4f4f4, emissiveIntensity: 0.05 });
+            const marbleMat = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.1, metalness: 0.05 });
             bench = new THREE.Group();
             const seatHeight = 2.4, baseHeight = 0.6;
             const seat = new THREE.Mesh(new THREE.BoxGeometry(12, seatHeight, 5), marbleMat);
@@ -344,55 +462,325 @@
             scene.add(bench);
         }
 
+        async function getMediaAspect(item) {
+            const isFile = item instanceof File;
+            const url = isFile ? URL.createObjectURL(item) : item.url;
+            const type = item.type;
+            const identifier = isFile ? item.name : url;
+
+            return new Promise((resolve, reject) => {
+                if (type.startsWith('image/')) {
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.onload = () => { resolve(img.width / img.height); if(isFile) URL.revokeObjectURL(url); };
+                    img.onerror = () => { 
+                        if(isFile) URL.revokeObjectURL(url);
+                        reject(new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`));
+                    };
+                    img.src = url;
+                } else {
+                    const v = document.createElement('video');
+                    v.crossOrigin = "anonymous";
+                    v.onloadedmetadata = () => { resolve(v.videoWidth / v.videoHeight || 1.6); if(isFile) URL.revokeObjectURL(url); };
+                    v.onerror = () => { 
+                        if(isFile) URL.revokeObjectURL(url);
+                        reject(new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`));
+                    };
+                    v.src = url;
+                }
+            });
+        }
+
+        async function curateFloors(allFiles) {
+            const curated = [];
+            let currentIndex = 0;
+            const wallLimits = [80, 100, 80, 100]; // 對應 4 面牆的可用長度
+            const gap = 12;
+            const total = allFiles.length;
+
+            while (currentIndex < allFiles.length) {
+                const floorItems = [];
+                let wallIdx = 0;
+                let currentWallUsed = 0;
+
+                while (currentIndex < allFiles.length && wallIdx < 4) {
+                    updateLoadingProgress((currentIndex / total) * 100);
+                    const item = allFiles[currentIndex];
+                    const aspect = await getMediaAspect(item);
+                    let w = 9 * aspect;
+                    if (w > 28) w = 28;
+
+                    // 如果目前牆面放不下，換下一面牆
+                    if (currentWallUsed + w > wallLimits[wallIdx]) {
+                        wallIdx++;
+                        if (wallIdx >= 4) break; // 這一層滿了
+                        currentWallUsed = w + gap;
+                    } else {
+                        currentWallUsed += w + gap;
+                    }
+                    
+                    floorItems.push({ file: item, aspect });
+                    currentIndex++;
+                }
+                if (floorItems.length > 0) curated.push(floorItems);
+            }
+            updateLoadingProgress(100);
+            return curated;
+        }
+
         async function handleFiles(e) {
+            if (isLoading) return;
             const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
             if(files.length === 0) return;
-            floors = []; let currentFloorItems = [];
-            files.forEach((file, idx) => { currentFloorItems.push(file); if(currentFloorItems.length >= 16 || idx === files.length - 1) { floors.push([...currentFloorItems]); currentFloorItems = []; } });
-            document.getElementById('ui-layer').style.opacity = '0';
-            setTimeout(() => { document.getElementById('ui-layer').style.display = 'none'; }, 800);
-            await loadFloor(0, true);
-            document.body.requestPointerLock();
-            if(floors.length > 1) document.getElementById('floor-control').style.display = 'block';
+
+            try {
+                isLoading = true;
+                updateLoadingProgress(0);
+                const overlay = document.getElementById('loading-overlay');
+                overlay.style.display = 'flex';
+                requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+                floors = await curateFloors(files);
+
+                document.getElementById('ui-layer').style.opacity = '0';
+                setTimeout(() => { document.getElementById('ui-layer').style.display = 'none'; }, 800);
+
+                isLoading = false;
+                currentFloorIdx = 0;
+                await loadFloor(0, true);
+                if(floors.length > 1) document.getElementById('floor-control').style.display = 'flex';
+                document.getElementById('settings-trigger').style.display = 'flex';
+            } catch (err) {
+                console.error("Local gallery load failed:", err);
+                showError(err.message);
+            }
+        }
+
+        async function fetchAndLoadManifest(inputUrl) {
+            let loadUrl = inputUrl;
+            let isGitHubShortcut = false;
+            
+            // GitHub 轉換邏輯：支援 username/repo 格式或 github.com 連結
+            if (loadUrl && !loadUrl.startsWith('http')) {
+                isGitHubShortcut = true;
+                loadUrl = `https://raw.githubusercontent.com/${loadUrl}/main/manifest.json`;
+            } else if (loadUrl && loadUrl.includes('github.com') && !loadUrl.includes('raw.githubusercontent.com')) {
+                loadUrl = loadUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            }
+
+            const t = translations[currentLang];
+            
+            // 顯示免責聲明彈窗
+            const disclaimerOverlay = document.getElementById('disclaimer-overlay');
+            disclaimerOverlay.style.display = 'flex';
+            document.getElementById('ui-layer').style.display = 'none';
+
+            // 等待使用者確認
+            return new Promise((resolve) => {
+                document.getElementById('disclaimer-cancel-btn').onclick = () => {
+                    disclaimerOverlay.style.display = 'none';
+                    const uiLayer = document.getElementById('ui-layer');
+                    uiLayer.style.display = 'flex';
+                    uiLayer.style.opacity = '1';
+                    resolve();
+                };
+
+                document.getElementById('disclaimer-confirm-btn').onclick = async () => {
+                    disclaimerOverlay.style.display = 'none';
+                    try {
+                        isLoading = true;
+                        updateLoadingProgress(0);
+                        const overlay = document.getElementById('loading-overlay');
+                        overlay.style.display = 'flex';
+                        requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+                        let resp = await fetch(loadUrl);
+
+                        if (!resp.ok && resp.status === 404 && isGitHubShortcut) {
+                            const fallbackUrl = loadUrl.replace('/main/', '/master/');
+                            const fallbackResp = await fetch(fallbackUrl);
+                            if (fallbackResp.ok) resp = fallbackResp;
+                        }
+
+                        if (!resp.ok) {
+                            throw new Error(resp.status === 404 ? t.errorManifestNotFound : t.errorFetchFailed + " (" + resp.status + ")");
+                        }
+
+                        let data;
+                        try {
+                            data = await resp.json();
+                        } catch(parseErr) {
+                            throw new Error(t.errorInvalidFormat);
+                        }
+                        
+                        if (data.record && Array.isArray(data.record)) data = data.record;
+                        if (!Array.isArray(data)) throw new Error(t.errorInvalidFormat);
+                        
+                        floors = await curateFloors(data);
+                        isLoading = false;
+                        currentFloorIdx = 0;
+                        await loadFloor(0, true);
+                        if(floors.length > 1) document.getElementById('floor-control').style.display = 'flex';
+                        document.getElementById('settings-trigger').style.display = 'flex';
+                        resolve();
+                    } catch(e) {
+                        console.error("Manifest load failed:", e);
+                        isLoading = false;
+                        const uiLayer = document.getElementById('ui-layer');
+                        uiLayer.style.display = 'flex';
+                        uiLayer.style.opacity = '1';
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        showError(e.message, inputUrl);
+                        resolve();
+                    }
+                };
+            });
+        }
+
+        async function checkOnlineMode() {
+            const params = new URLSearchParams(window.location.search);
+            const loadUrl = params.get('load') || DEFAULT_LOAD_URL;
+            if (loadUrl) fetchAndLoadManifest(loadUrl);
+        }
+
+        function showError(msg, url = null) {
+            lastFailedUrl = url;
+            const displayMsg = (url && !msg.includes(url)) ? `${msg}\n\n[URL: ${url}]` : msg;
+            document.getElementById('error-message').innerText = displayMsg;
+            document.getElementById('error-overlay').style.display = 'flex';
+            document.getElementById('loading-overlay').style.display = 'none';
+            isLoading = false;
+        }
+        function closeError() {
+            if (document.activeElement) document.activeElement.blur();
+            document.getElementById('error-overlay').style.display = 'none';
+            const uiLayer = document.getElementById('ui-layer');
+            uiLayer.style.display = 'flex';
+            uiLayer.style.opacity = '1';
+        }
+
+        function openHelp() { 
+            isHelpOpen = true; 
+            document.exitPointerLock(); 
+            document.getElementById('help-overlay').style.display = 'flex'; 
+        }
+        function closeHelp() { 
+            if (document.activeElement) document.activeElement.blur();
+            isHelpOpen = false; 
+            document.getElementById('help-overlay').style.display = 'none'; 
         }
 
         async function loadFloor(idx, resetPos = false) {
             if (isLoading) return;
             isLoading = true;
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-overlay').style.opacity = '1';
+            updateLoadingProgress(0);
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex';
+            requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+            // 等待遮罩動畫進行到足夠暗，才開始清理與更換畫作
+            await new Promise(r => setTimeout(r, 1500));
+
             mediaObjects.forEach(obj => { if(obj.video) { obj.video.pause(); obj.video.src=""; obj.video.load(); obj.video.remove(); } scene.remove(obj.parent); });
             spotLights.forEach(l => { scene.remove(l.target); scene.remove(l); });
             mediaObjects.length = 0; spotLights.length = 0; selectableArt = [];
-            const files = floors[idx];
+            
+            // 為展場中央的長椅增加頂部射燈
+            const benchSpot = new THREE.SpotLight(0xffffff, state.spotIntensity, 40, 0.4, 0.5, 1.2);
+            benchSpot.position.set(0, ROOM.h - 2, 0);
+            const benchTarget = new THREE.Object3D(); benchTarget.position.set(0, 0, 0);
+            scene.add(benchTarget); benchSpot.target = benchTarget;
+            scene.add(benchSpot); spotLights.push(benchSpot);
+            
+            const floorData = floors[idx];
+            let loadedCount = 0;
+            const totalItems = floorData.length;
             const walls = [{ axis: 'x', start: -ROOM.w/2+10, limit: ROOM.w/2-10, pos: {x:0, z:-ROOM.d/2+0.3}, rot: 0 }, { axis: 'z', start: -ROOM.d/2+10, limit: ROOM.d/2-10, pos: {x:ROOM.w/2-0.3, z:0}, rot: -Math.PI/2 }, { axis: 'x', start: -ROOM.w/2+10, limit: ROOM.w/2-10, pos: {x:0, z:ROOM.d/2-0.3}, rot: Math.PI }, { axis: 'z', start: -ROOM.d/2+10, limit: ROOM.d/2-10, pos: {x:-ROOM.w/2+0.3, z:0}, rot: Math.PI/2 }];
-            let wallIdx = 0, cursor = walls[0].start;
-            const texLoader = new THREE.TextureLoader();
-            for (const file of files) {
-                let texture, vEl = null, aspect = 1.6;
-                const url = URL.createObjectURL(file);
-                if (file.type.startsWith('video/')) {
-                    vEl = document.createElement('video'); vEl.src = url; vEl.muted = true; vEl.loop = true; vEl.playsInline = true;
-                    await new Promise(r => { vEl.onloadedmetadata = r; setTimeout(r, 1000); });
-                    texture = new THREE.VideoTexture(vEl); aspect = vEl.videoWidth / vEl.videoHeight || 1.6;
-                } else { const tex = await texLoader.loadAsync(url); aspect = tex.image.width / tex.image.height; texture = tex; }
-                const h = 9, w = h * aspect, gap = 12;
-                if (cursor + w > walls[wallIdx].limit) { wallIdx++; if (wallIdx >= walls.length) break; cursor = walls[wallIdx].start; }
-                const wall = walls[wallIdx];
-                const artGroup = new THREE.Group();
-                const frame = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, h+0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0x030303, metalness: 0.1, roughness: 0.5 }));
-                artGroup.add(frame);
-                const canvas = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: texture, emissive: 0xffffff, emissiveIntensity: 0.05, roughness: 0.4 }));
-                canvas.position.z = 0.22; artGroup.add(canvas); selectableArt.push(canvas); 
-                artGroup.position.set(wall.axis === 'x' ? cursor + w/2 : wall.pos.x, 8, wall.axis === 'z' ? cursor + w/2 : wall.pos.z);
-                artGroup.rotation.y = wall.rot; scene.add(artGroup);
-                addSpotlight(artGroup, w, h, wall.rot);
-                mediaObjects.push({ video: vEl, parent: artGroup, texture: texture, canvas: canvas }); cursor += w + gap;
+            const wallLimits = [80, 100, 80, 100];
+            const gap = 12;
+
+            // 重新分配作品到牆面以進行居中計算
+            const wallAssignments = [[], [], [], []];
+            let currentWallIdx = 0;
+            let currentWallUsed = 0;
+
+            for (const item of floorData) {
+                let w = 9 * item.aspect; if (w > 28) w = 28;
+                if (currentWallUsed + w > wallLimits[currentWallIdx]) {
+                    currentWallIdx++;
+                    if (currentWallIdx >= 4) break;
+                    currentWallUsed = w + gap;
+                } else {
+                    currentWallUsed += w + gap;
+                }
+                wallAssignments[currentWallIdx].push({ ...item, w });
             }
+
+            const texLoader = new THREE.TextureLoader();
+            texLoader.setCrossOrigin('anonymous');
+            for (let i = 0; i < 4; i++) {
+                const wall = walls[i];
+                const items = wallAssignments[i];
+                if (items.length === 0) continue;
+
+                const totalW = items.reduce((sum, item) => sum + item.w, 0) + (items.length - 1) * gap;
+                let cursor = wall.start + (wallLimits[i] - totalW) / 2; // 計算起始點以達成居中
+
+                for (const item of items) {
+                    loadedCount++;
+                    updateLoadingProgress((loadedCount / totalItems) * 100);
+                    let texture, vEl = null, h = 9, w = item.w;
+                    
+                    const mediaData = item.file;
+                    const isFile = mediaData instanceof File;
+                    const url = isFile ? URL.createObjectURL(mediaData) : mediaData.url;
+                    const type = mediaData.type;
+                    const identifier = isFile ? mediaData.name : url;
+
+                    try {
+                        if (type.startsWith('video/')) {
+                            vEl = document.createElement('video'); 
+                            vEl.crossOrigin = "anonymous";
+                            vEl.src = url; vEl.muted = true; vEl.loop = true; vEl.playsInline = true; vEl.volume = 0;
+                            await new Promise((resolve, reject) => { 
+                                vEl.onloadedmetadata = resolve; 
+                                vEl.onerror = () => reject(new Error("Video playback error"));
+                                setTimeout(resolve, 5000); 
+                            });
+                            texture = new THREE.VideoTexture(vEl);
+                        } else { 
+                            texture = await texLoader.loadAsync(url); 
+                        }
+                    } catch (err) {
+                        throw new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`);
+                    }
+                    
+                    const artGroup = new THREE.Group();
+                    const frame = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, h+0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0x030303, metalness: 0.1, roughness: 0.5 }));
+                    artGroup.add(frame);
+                    const canvas = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: texture, roughness: 0.4 }));
+                    canvas.position.z = 0.22; artGroup.add(canvas); selectableArt.push(canvas); 
+                    artGroup.position.set(wall.axis === 'x' ? cursor + w/2 : wall.pos.x, 8, wall.axis === 'z' ? cursor + w/2 : wall.pos.z);
+                    artGroup.rotation.y = wall.rot; scene.add(artGroup);
+                    addSpotlight(artGroup, w, h, wall.rot);
+                    mediaObjects.push({ video: vEl, parent: artGroup, texture: texture, canvas: canvas });
+                    cursor += w + gap;
+                }
+            }
+
+            updateLoadingProgress(100);
             if(resetPos) player.position.set(0, 5.5, 50);
             applySpotSettings();
+            
+            // 增加停留時間讓進度條跑完，並讓視覺過渡更自然，避免畫面閃爍
+            await new Promise(r => setTimeout(r, 1500)); 
+
             document.getElementById('loading-overlay').style.opacity = '0'; 
-            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; isLoading = false; if (document.getElementById('ui-layer').style.display === 'none') document.body.requestPointerLock(); }, 1000);
+            await new Promise(r => setTimeout(r, 1800)); // 真正等待動畫結束
+            
+            document.getElementById('loading-overlay').style.display = 'none'; 
+            isLoading = false; 
+            if (document.getElementById('ui-layer').style.display === 'none') document.body.requestPointerLock();
         }
 
         function addSpotlight(targetGroup, w, h, rotation) {
@@ -404,6 +792,11 @@
 
         function applySpotSettings() { spotLights.forEach(l => { l.intensity = state.spotIntensity; l.angle = state.spotAngle; l.visible = state.spotVisible; }); }
         function formatTime(s) { if(!s || isNaN(s)) return "00:00"; const min = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
+
+        function updateLoadingProgress(pct) {
+            const bar = document.getElementById('loading-progress');
+            if (bar) bar.style.width = `${pct}%`;
+        }
 
         function showTimerUI() {
             const timer = document.getElementById('video-timer');
@@ -451,6 +844,7 @@
             document.getElementById('footstep-slider').value = state.footstepVolume;
             document.getElementById('ambience-slider').value = state.ambienceVolume;
             document.getElementById('music-slider').value = state.musicVolume;
+            document.getElementById('video-slider').value = state.videoVolume;
             document.getElementById('fov-slider').value = state.fov;
             document.getElementById('ambient-slider').value = state.ambientIntensity;
             document.getElementById('spot-slider').value = state.spotIntensity;
@@ -465,6 +859,7 @@
         }
 
         function resetSettingsToDefault() {
+            if (document.activeElement) document.activeElement.blur();
             // Reset state object by copying from defaultState
             Object.assign(state, defaultState);
 
@@ -493,24 +888,44 @@
         function setupInteractiveControls() {
             const toggleSettings = () => {
                 isSettingsOpen = !isSettingsOpen;
+                document.activeElement.blur(); // 釋放按鈕焦點，防止空白鍵誤觸
                 if (isSettingsOpen) { document.exitPointerLock(); document.getElementById('settings-panel').style.display = 'block'; }
                 else { document.body.requestPointerLock(); document.getElementById('settings-panel').style.display = 'none'; }
             };
 
             document.getElementById('lang-switcher').addEventListener('click', (e) => {
                 if (e.target.matches('.lang-btn')) {
+                    e.target.blur();
                     applyLanguage(e.target.dataset.lang);
                     saveSettings();
                 }
             });
 
-            document.getElementById('resume-btn').onclick = () => document.body.requestPointerLock();
-            document.getElementById('settings-trigger').onclick = (e) => { e.stopPropagation(); toggleSettings(); };
+            document.getElementById('floor-control').onclick = (e) => {
+                e.stopPropagation();
+                e.target.blur(); // 釋放焦點
+                if (!isLoading && floors.length > 1) {
+                    currentFloorIdx = (currentFloorIdx + 1) % floors.length;
+                    loadFloor(currentFloorIdx, false);
+                }
+            };
+
+            document.getElementById('resume-btn').onclick = (e) => {
+                e.target.blur(); // 釋放焦點
+                document.body.requestPointerLock();
+            };
+
+            document.getElementById('settings-trigger').onclick = (e) => { 
+                e.stopPropagation(); 
+                if (e.currentTarget) e.currentTarget.blur();
+                toggleSettings(); 
+            };
             document.getElementById('speed-slider').oninput = (e) => { state.speed = parseFloat(e.target.value); saveSettings(); };
             document.getElementById('jump-slider').oninput = (e) => { state.jumpForce = parseFloat(e.target.value); saveSettings(); };
             document.getElementById('footstep-slider').oninput = (e) => { state.footstepVolume = parseFloat(e.target.value); saveSettings(); };
             document.getElementById('ambience-slider').oninput = (e) => { state.ambienceVolume = parseFloat(e.target.value); if(ambienceGain) ambienceGain.gain.value = state.audioMuted ? 0 : state.ambienceVolume; saveSettings(); };
             document.getElementById('music-slider').oninput = (e) => { state.musicVolume = parseFloat(e.target.value); saveSettings(); };
+            document.getElementById('video-slider').oninput = (e) => { state.videoVolume = parseFloat(e.target.value); saveSettings(); };
             document.getElementById('fov-slider').oninput = (e) => { state.fov = parseFloat(e.target.value); saveSettings(); };
             document.getElementById('ambient-slider').oninput = (e) => { state.ambientIntensity = parseFloat(e.target.value); ambientLight.intensity = state.ambientIntensity; saveSettings(); };
             document.getElementById('spot-slider').oninput = (e) => { state.spotIntensity = parseFloat(e.target.value); applySpotSettings(); saveSettings(); };
@@ -525,6 +940,15 @@
             document.getElementById('fps-toggle').onchange = (e) => { state.fpsVisible = e.target.checked; document.getElementById('fps-counter').style.display = state.fpsVisible ? 'block' : 'none'; saveSettings(); };
             document.getElementById('flashlight-toggle').onchange = (e) => { state.flashlightOn = e.target.checked; flashlight.visible = state.flashlightOn; saveSettings(); };
             document.getElementById('reset-settings').onclick = resetSettingsToDefault;
+
+            document.getElementById('error-retry-btn').onclick = () => {
+                if (lastFailedUrl) {
+                    document.getElementById('error-overlay').style.display = 'none';
+                    fetchAndLoadManifest(lastFailedUrl);
+                }
+            };
+
+            document.getElementById('help-trigger').onclick = (e) => { e.stopPropagation(); e.target.blur(); openHelp(); };
 
             document.addEventListener('pointerlockchange', () => {
                 const isLocked = document.pointerLockElement === document.body;
@@ -542,7 +966,11 @@
             window.addEventListener('wheel', e => { if(isZooming && !isPaused) { e.preventDefault(); targetZoomFov = Math.max(5, Math.min(state.fov - 5, targetZoomFov + e.deltaY * 0.05)); } }, { passive: false });
 
             window.addEventListener('keydown', e => {
-                if(e.code === 'KeyU') { e.preventDefault(); toggleSettings(); }
+                if(e.code === 'KeyU' && !e.ctrlKey && !e.altKey && !e.metaKey) { 
+                    e.preventDefault(); 
+                    toggleSettings(); 
+                    return; 
+                }
                 if(e.code === 'KeyY') {
                     state.audioMuted = !state.audioMuted;
                     document.getElementById('mute-toggle').checked = state.audioMuted;
@@ -553,6 +981,7 @@
                 if(e.code === 'KeyE' && !isLoading) { currentFloorIdx = (currentFloorIdx + 1) % floors.length; loadFloor(currentFloorIdx, false); }
                 
                 if(e.code === 'Space' && !isStandingUp) {
+                    e.preventDefault(); // 防止觸發網頁元素的預設行為
                     if (canBenchInteract || isSitting) {
                         if (!isSitting) {
                             preSittingPos.copy(player.position); preSittingRotY = player.rotation.y;
@@ -612,7 +1041,7 @@
             });
 
             document.addEventListener('mousemove', e => {
-                if (document.pointerLockElement === document.body && !isSitting) {
+                if (document.pointerLockElement === document.body) {
                     // 如果滑鼠移動，重置因長時間注視而隱藏的準星狀態
                     if (isReticleFocusHidden) {
                         isReticleFocusHidden = false;
@@ -647,8 +1076,12 @@
 
             // 根據當前狀態，管理暫停選單的顯示，確保在任何游標解鎖的情況下都能正確顯示
             const isLocked = !!document.pointerLockElement;
-            const showPauseMenu = !isLocked && !isSettingsOpen && document.getElementById('ui-layer').style.display === 'none' && !isLoading;
+            const uiLayer = document.getElementById('ui-layer');
+            const isInitialScreen = uiLayer.style.display !== 'none';
+            const showPauseMenu = !isLocked && !isSettingsOpen && !isHelpOpen && !isInitialScreen && !isLoading;
+            
             document.getElementById('start-overlay').style.display = showPauseMenu ? 'flex' : 'none';
+            document.getElementById('help-trigger').style.display = (isInitialScreen || showPauseMenu) ? 'flex' : 'none';
 
             if (state.fpsVisible) updateFPS();
             const prompt = document.getElementById('interaction-prompt');
@@ -665,10 +1098,10 @@
                 const distToBench = player.position.distanceTo(benchPos);
                 canBenchInteract = intersectsBench.length > 0 && distToBench < 10;
 
-                // --- 準星可見性邏輯 ---
+                const isInteractionBlocked = isPaused || isSettingsOpen || isHelpOpen;
+
                 let shouldBeVisible = state.reticleVisible;
-                // 條件1: 縮放時隱藏
-                if (isZooming) shouldBeVisible = false;
+                if (isZooming || isInteractionBlocked) shouldBeVisible = false;
                 
                 // 條件2: 長時間注視同一作品時隱藏
                 if (pointedCanvas && pointedCanvas === lastPointedCanvas) {
@@ -686,10 +1119,8 @@
                 reticle.style.opacity = shouldBeVisible ? '1' : '0';
                 reticle.classList.toggle('active', shouldBeVisible && (!!pointedCanvas || (canBenchInteract && !isSitting)));
 
-                if (isSitting) {
+                if (isSitting && !isInteractionBlocked) {
                     player.position.lerp(new THREE.Vector3(0, 5.8, 0), 0.08);
-                    player.rotation.y = lerpAngle(player.rotation.y, targetSittingRotY, 0.15);
-                    pitch.rotation.x = THREE.MathUtils.lerp(pitch.rotation.x, 0, 0.15);;
                     prompt.style.display = 'block'; prompt.innerText = translations[currentLang].pressSpaceToStand;
                 } else if (isStandingUp) {
                     player.position.lerp(preSittingPos, 0.1);
@@ -697,7 +1128,7 @@
                     if (player.position.distanceTo(preSittingPos) < 0.1) isStandingUp = false;
                     prompt.style.display = 'none';
                 } else {
-                    prompt.style.display = canBenchInteract ? 'block' : 'none';;
+                    prompt.style.display = (canBenchInteract && !isInteractionBlocked) ? 'block' : 'none';
                     prompt.innerText = translations[currentLang].pressSpaceToSit;
 
                     if ((document.pointerLockElement || isSettingsOpen) && !isPaused) {
@@ -713,8 +1144,12 @@
                         const borderW = ROOM.w/2 - 5, borderD = ROOM.d/2 - 5;
                         const oldX = player.position.x, oldZ = player.position.z;
 
-                        if (!(Math.abs(nextX - benchPos.x) < benchBox.w / 2 && Math.abs(player.position.z - benchPos.z) < benchBox.d / 2)) player.position.x = Math.max(-borderW, Math.min(borderW, nextX));
-                        if (!(Math.abs(player.position.x - benchPos.x) < benchBox.w / 2 && Math.abs(nextZ - benchPos.z) < benchBox.d / 2)) player.position.z = Math.max(-borderD, Math.min(borderD, nextZ));
+                        // 強化碰撞：如果高度足夠 (正在跳躍/飛越)，則允許進入椅子範圍
+                        const isOverBenchX = (Math.abs(nextX - benchPos.x) < benchBox.w / 2 && Math.abs(player.position.z - benchPos.z) < benchBox.d / 2);
+                        if (!isOverBenchX || player.position.y > 6.5) player.position.x = Math.max(-borderW, Math.min(borderW, nextX));
+                        
+                        const isOverBenchZ = (Math.abs(player.position.x - benchPos.x) < benchBox.w / 2 && Math.abs(nextZ - benchPos.z) < benchBox.d / 2);
+                        if (!isOverBenchZ || player.position.y > 6.5) player.position.z = Math.max(-borderD, Math.min(borderD, nextZ));
 
                         if (canJump) {
                             const dist = Math.sqrt((player.position.x - oldX)**2 + (player.position.z - oldZ)**2);
@@ -725,65 +1160,87 @@
                         }
                     }
                     player.position.y += velocityY;
-                    if (player.position.y > 5.5) {
+                    
+                    // 動態偵測當前位置的地面高度 (椅子上為 8.5, 地板為 5.5)
+                    const currentInBench = Math.abs(player.position.x - benchPos.x) < benchBox.w / 2 && Math.abs(player.position.z - benchPos.z) < benchBox.d / 2;
+                    const groundY = currentInBench ? 8.5 : 5.5;
+
+                    if (player.position.y > groundY) {
                         velocityY -= 0.008; 
                     } else { 
                         if (!canJump) playFootstep(true); // Landing sound
-                        player.position.y = 5.5; velocityY = 0; canJump = true; 
+                        player.position.y = groundY; velocityY = 0; canJump = true; 
                     }
                 }
 
-                let foundActiveVideo = null;
-                const viewDir = new THREE.Vector3(); camera.getWorldDirection(viewDir);
-                
-                if (!isPaused && document.getElementById('ui-layer').style.display === 'none') {
+                // --- 影片播放管理優化 ---
+                let foundObj = null; 
+                const now = performance.now();
+
+                // 節流處理：每 200ms 才搜尋一次最近的影片，大幅降低 CPU 負擔
+                if (!isPaused && uiLayer.style.display === 'none' && now - lastVideoSearchTime > 200) {
+                    lastVideoSearchTime = now;
+                    camera.getWorldDirection(_viewDir);
+                    
                     if (pointedCanvas) {
-                        const targetObj = mediaObjects.find(obj => obj.canvas === pointedCanvas);
-                        if (targetObj && targetObj.video) foundActiveVideo = targetObj.video;
+                        foundObj = mediaObjects.find(obj => obj.canvas === pointedCanvas && obj.video);
                     }
 
-                    if (!foundActiveVideo) {
-                        let minDistance = 25;
-                        mediaObjects.forEach(obj => {
-                            if (obj.video) {
-                                const dist = player.position.distanceTo(obj.parent.position);
-                                const toTarget = new THREE.Vector3().subVectors(obj.parent.position, player.position).normalize();
-                                const isLookingAt = viewDir.dot(toTarget) > 0.85;
-                                if (dist < minDistance && isLookingAt) {
-                                    minDistance = dist;
-                                    foundActiveVideo = obj.video;
+                    if (!foundObj) {
+                        let minDistanceSq = 25 * 25; // 使用距離平方進行快速比較
+                        for (const obj of mediaObjects) {
+                            if (!obj.video) continue;
+                            const dSq = player.position.distanceToSquared(obj.parent.position);
+                            if (dSq < minDistanceSq) {
+                                _tempVec.subVectors(obj.parent.position, player.position).normalize();
+                                if (_viewDir.dot(_tempVec) > 0.85) {
+                                    minDistanceSq = dSq;
+                                    foundObj = obj;
                                 }
                             }
-                        });
+                        }
+                    }
+
+                    // 更新目前注視的影片目標引用
+                    const foundVideo = foundObj ? foundObj.video : null;
+                    if (activeVideo !== foundVideo) activeVideo = foundVideo;
+                }
+
+                // 影片音量漸變與播放狀態全域管理 (每幀執行以確保平滑度)
+                for (const obj of mediaObjects) {
+                    if (!obj.video) continue;
+                    
+                    const isTarget = (obj.video === activeVideo && !state.audioMuted);
+                    const targetVol = isTarget ? state.videoVolume : 0;
+                    const v = obj.video;
+
+                    // 平滑過渡音量
+                    if (v.volume !== targetVol) {
+                        v.volume = THREE.MathUtils.lerp(v.volume, targetVol, 0.08);
+                        if (Math.abs(v.volume - targetVol) < 0.001) v.volume = targetVol;
+                    }
+
+                    // 嚴格控制播放行為：只有當該影片是當前注視目標時才准許啟動播放
+                    if (isTarget && v.paused) {
+                        v.muted = false; 
+                        v.play().catch(() => {});
+                    } else if (!isTarget && v.volume === 0 && !v.paused) {
+                        // 只有當不再是目標且音量已完全淡出至 0 時，才執行暫停
+                        v.pause();
                     }
                 }
 
-                mediaObjects.forEach(obj => {
-                    if (obj.video) {
-                        const isTarget = (obj.video === foundActiveVideo);
-                        if (isTarget) {
-                            // 自動循環播放設定
-                            if (obj.video.paused && !isLongPressActive) {
-                                obj.video.muted = false;
-                                obj.video.loop = true; // 確保自動循環
-                                obj.video.play().catch(() => {});
-                            }
-                            if (obj.texture && obj.video.readyState >= 2) obj.texture.needsUpdate = true;
-                        } else {
-                            if (!obj.video.paused) { obj.video.pause(); obj.video.muted = true; }
-                        }
-                    }
-                });
-
-                if (foundActiveVideo) {
-                    activeVideo = foundActiveVideo;
+                if (activeVideo) {
                     document.getElementById('video-controls').style.opacity = '1';
                     
-                    // 根據狀態顯示時間或 Replayed
-                    const timeString = `${formatTime(activeVideo.currentTime)} / ${formatTime(activeVideo.duration)}`;
-                    document.getElementById('video-timer').innerText = videoStatusText ? videoStatusText : timeString;
+                    // 僅在秒數改變時更新 UI 文字，減少 Layout Reflow
+                    const curTimeSec = Math.floor(activeVideo.currentTime);
+                    if (curTimeSec !== lastVideoTimeUpdate || videoStatusText) {
+                        lastVideoTimeUpdate = curTimeSec;
+                        const timeString = `${formatTime(activeVideo.currentTime)} / ${formatTime(activeVideo.duration)}`;
+                        document.getElementById('video-timer').innerText = videoStatusText ? videoStatusText : timeString;
+                    }
                 } else if (!isLongPressActive) {
-                    activeVideo = null;
                     document.getElementById('video-controls').style.opacity = '0';
                 }
 
