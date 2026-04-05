@@ -1,6 +1,6 @@
-# LUMIERE-SPACE (流光空間) 線上圖庫架設教學 🖼️
+# LUMIERE-SPACE (流光空間) 開發教學 🖼️
 
-最新版本，加入了Github網頁圖庫連結系統
+最新版本，加入了Github網頁線上圖庫連結系統
 <br>你可以在網址中接入你的Github儲存庫網址，即可使用線上版本，你可以把連結分享給他人，讓大家也一起體驗你獨一無二的展覽
 
 [👉 立即體驗 LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)
@@ -12,7 +12,7 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 
 ## 使用前需要
 注意，線上展覽需要些許資訊能力，以確保你能夠正確的了解並架設
-以下是你需要的基本項目
+以下是你需要的基本項目:
 * **Github Pages架設**：這個功能本質上就是透過Github Page功能將儲存庫的資料透過代碼轉交到網頁中。
 * **json編寫能力**：你需要簡單的概念去編寫必要的json檔，以確保網頁能正常讀取你的資料庫。
 
@@ -31,7 +31,7 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 
 ### 開始觀展
 1.  點擊進入 [LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)。
-2.  網址後方寫上 /?load=使用者名稱/儲存庫名稱
+2.  網址後方寫上 /?load=使用者名稱/儲存庫名稱 (例如：/?load=sally802528/TEST_online_LS)
 3.  按下Enter，如果步驟正常，網頁就會讀取並佈展了
 
 ---
@@ -53,6 +53,14 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 ]
 ```
 ---
+## 常見問題
+
+1. 找不到設定檔 (Manifest not found)：請確認 GitHub 儲存庫根目錄是否有 manifest.json，且位於 main 或 master 分支。
+2. 格式錯誤 (Invalid Format)：manifest.json 內容必須是一個 JSON 陣列 [...]，不能是單一物件。
+3. 連線失敗/CORS 阻擋：請確保媒體連結是正確無誤，以及網路是否正常。
+4. 沒有聲音：瀏覽器預設禁止自動播放聲音，請進入展場後點擊一次畫面以解鎖音訊，或檢查「設定」中的音量。
+5. 無法載入圖片但是有寫manifest.json:請確認你的圖庫圖片是否正常，manifest.json連結類型是否正確
+---
 ## 開發者的一封信
 親愛的專業用戶你好
 <br>想必你在試圖建立一個公開的畫展時
@@ -69,6 +77,16 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
   2. 不要上傳成人內容或暴力血腥
   3. 不要上傳任何QR code 或連結的圖片
   4. 不要藉由圖片散播任何政治、惡意軟體、木馬、極端內容等
+
+本工作室絕不容忍任何未成年性侵害的影像流通於平台
+<br>如果查獲相關內容，請務必與本工作室聯絡，我們將會盡快對其處理並封鎖該連結
+<br>並前往該資料庫來源進行檢舉，Github條款明令禁止包含未成年性內容的儲存庫
+
+---
+## 免責聲明
+展場內容不屬於Qimei Technology Studio 所有，由於資料庫不受本工作室管制，展場內展出內容之版權與法律責任，概由該資料來源儲存庫之建立者自行承擔。
+<br>若內容涉及侵權或違法之虞，請逕行聯繫內容提供者。
+
 ---
 ## 🧑‍🔧 錯誤報告
 
