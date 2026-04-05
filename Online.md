@@ -5,6 +5,8 @@
 
 [👉 立即體驗 LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)
 
+[👉 範例網站 ](https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS)
+
 ---
 
 ## 使用前需要
@@ -28,7 +30,7 @@
 
 ### 開始觀展
 1.  點擊進入 [LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)。
-2.  網址後方寫上 /?load=你的網址/manifest.json，指向寫好的manifest.json檔案
+2.  網址後方寫上 /?load=使用者名稱/儲存庫名稱
 3.  按下Enter，如果步驟正常，網頁就會讀取並佈展了
 
 ---
@@ -44,11 +46,27 @@
     "type": "image/jpeg"
   },
   {
-    "url": "https://sally802528.github.io/TEST_online_LS/2.jpg",
-    "type": "image/jpeg"
+    "url": "https://sally802528.github.io/TEST_online_LS/2.mp4",
+    "type": "video/mp4"
   }
 ]
 ```
+---
+## 親愛的開發者
+想必你在試圖建立一個公開的畫展時
+<br>應該領悟到了一些基本需要注意的事項
+<br>無外乎就是三點
+1. 權利越大，責任越大
+2. 設置不雅的內容，對你我他都不是好事
+3. 照顧一下觀眾的想法
+
+<br>我們都能理解你的興奮
+<br>但是網路不是不法之地，你的任何壞心思都有可能害了你
+<br>這邊我有幾件事希望你能做到
+  1. 不要上傳過大的檔案
+  2. 不要上傳成人內容或暴力血腥
+  3. 不要上傳任何QR code 或連結的圖片
+  4. 不要藉由圖片散播任何政治、惡意軟體、木馬、極端內容等
 ---
 
 ## 🔩 相容性
