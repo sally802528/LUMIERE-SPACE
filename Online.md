@@ -7,6 +7,7 @@
 
 [👉 範例網站 ](https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS)
 https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
+<br>你可以進入範例網站，其中包含結構呈現，與畫作順序
 
 ---
 
@@ -19,6 +20,11 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 ---
 
 ## 🚀 快速上手
+
+### 簡要說明
+這個系統的概念其實很簡單，透過獲取架設在其他儲存庫的Json檔，其中定義每個檔案的資料與網址
+<br>系統就會按照定義檔的順序依序載入並渲染出來，而因為定義檔與資料都是與系統本身分開，所以只要有網路，架設正常就能透過網路開啟
+<br>由此來做到，簡單、穩定的公開方式。
 
 ### 準備工作
 1.  登入Github並建立儲存庫。
@@ -36,7 +42,7 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 
 ---
 
-## manifest.json 編寫教學
+## manifest.json 定義檔編寫教學
 
 檔案結構很簡單，就是這個檔案的連結跟類型
 <br>url要寫上每個檔案的網址，以儲存庫網址+檔名組成，儲存庫網址會在Actions等處標記
@@ -52,6 +58,54 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
   }
 ]
 ```
+如使用同一網址的根目錄
+也可以省略網址，單獨寫根目錄檔名
+<br>注意：使用簡寫時，系統會自動對應到載入來源的根目錄。請確保圖片與 manifest.json 放在同一個儲存庫資料夾中。
+如下:
+```
+[
+  {
+    "url": "/1.jpg",
+    "type": "image/jpeg"
+  },
+  {
+    "url": "/2.mp4",
+    "type": "video/mp4"
+  }
+]
+```
+### 新增說明文字
+你可以在遊戲中按下Q鍵呼叫作品的說明視窗
+而你需要在定義檔中完善每個作品的說明文字
+title是標題文字，info則是詳細文字
+而你必須要寫出其中一個，才可以觸發該作品的說明介面
+格式如下
+```
+[
+  {
+    "url": "/1.jpg",
+    "type": "image/jpeg",
+    "title":"示範空間的一些話",
+    "info":"Hi!，這是Qimei Technology Studio的流光空間線上示範畫廊"
+  }
+]
+```
+### 本地端定義檔
+你可以在本地端增加 custom.json 來做到類似manifest.json
+相較於manifest.json的url，網址，在本地端使用"file"定義檔案，直接輸入檔名
+而使用本地端定義檔，要注意，本地端不會有錯誤提示，如果錯誤會直接視同定義無效，直接進入正常的原畫廊
+此檔案需放在您電腦中圖片所在的指定媒體資料夾內
+並且一樣是只有定義的檔案才會顯示
+格式如下
+```
+[
+  {
+    "file": "1080p.mp4",
+    "title": "Night City",
+    "info": "A video of a night city street, showcasing the vibrant lights and bustling atmosphere. Perfect for use in projects that require a dynamic urban backdrop."
+  }
+]
+```
 ---
 ## 常見問題
 
@@ -59,7 +113,10 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 2. 格式錯誤 (Invalid Format)：manifest.json 內容必須是一個 JSON 陣列 [...]，不能是單一物件。
 3. 連線失敗/CORS 阻擋：請確保媒體連結是正確無誤，以及網路是否正常。
 4. 沒有聲音：瀏覽器預設禁止自動播放聲音，請進入展場後點擊一次畫面以解鎖音訊，或檢查「設定」中的音量。
-5. 無法載入圖片但是有寫manifest.json:請確認你的圖庫圖片是否正常，manifest.json連結類型是否正確
+5. 無法載入圖片但是有寫manifest.json:請確認你的圖庫圖片是否正常，manifest.json連結類型是否正確。
+6. 我可以用其他的平台放置檔案嗎:建議使用Github，因為Github相對穩定，並且不會有CORS 阻擋，因為畫廊系統本身就是屬於Github pages。
+7. 顯示json錯誤:檢查json格式是否正確，每個檔案是否用逗號隔開，有沒有多餘的錯誤空格或換行
+8. 畫作排序規則:畫作是按照manifest.json，從上而下的順序排列，可以參考範例網站
 ---
 ## 開發者的一封信
 親愛的專業用戶你好
