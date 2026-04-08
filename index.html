@@ -29,6 +29,21 @@
             height: 10px; 
         }
         
+        #q-prompt {
+            position: absolute; top: 40px; left: 40px;
+            width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255, 255, 255, 0.7); font-size: 20px; font-weight: bold; z-index: 2000;
+            pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        @keyframes q-flash {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.3; }
+        }
+        #q-prompt.active { animation: q-flash 1.2s infinite ease-in-out; }
+
         #video-controls { position: absolute; bottom: 50px; left: 50px; display: flex; gap: 30px; z-index: 1500; opacity: 0; transition: opacity 0.5s ease; }
         .ctrl-arrow { width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; cursor: pointer; position: relative; transition: border-color 0.2s; }
         .arrow-left { border-right: 20px solid rgba(255,255,255,0.3); }
@@ -85,6 +100,37 @@
             background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.6);
             text-shadow: 0 0 8px rgba(255,255,255,0.6); pointer-events: none;
         }
+
+        /* 詳細資訊面板樣式 */
+        #detail-overlay {
+            position: absolute; top: 0; right: 0; width: 420px; height: 100%;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            z-index: 5500; transform: translateX(100%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column; color: #1a1a1a;
+            border-left: 1px solid rgba(0,0,0,0.05);
+            box-shadow: -20px 0 60px rgba(0,0,0,0.1);
+            pointer-events: none; /* 預設不擋住操作 */
+        }
+        #detail-overlay.active { 
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+        .detail-right {
+            flex: 1; padding: 80px 50px; display: flex; flex-direction: column;
+            justify-content: center;
+        }
+        .detail-title { font-size: 24px; font-weight: 400; letter-spacing: 4px; margin-bottom: 35px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 25px; color: #000; }
+        .detail-info { 
+            flex: 1; overflow-y: auto; font-size: 15px; line-height: 2.2; opacity: 0.8; letter-spacing: 1px; padding-right: 20px;
+            color: #333;
+            scrollbar-width: thin;
+        }
+        .detail-info::-webkit-scrollbar { width: 4px; }
+        .detail-info::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        
+        .detail-footer { margin-top: 40px; font-size: 10px; letter-spacing: 3px; opacity: 0.3; text-transform: uppercase; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -92,6 +138,7 @@
     <div id="canvas-container"></div>
     <div id="reticle"></div>
     <div id="fps-counter">FPS: 0</div>
+    <div id="q-prompt">Q</div>
     <div id="interaction-prompt">PRESS [SPACE] TO SIT</div>
 
     <div id="video-controls">
@@ -159,6 +206,7 @@
                 <div class="help-grid">
                     <span class="help-key">WASD</span> <span data-lang-key="helpWASD">移動角色</span>
                     <span class="help-key">SPACE</span> <span data-lang-key="helpSpace">跳躍 / 坐下 / 站起</span>
+                    <span class="help-key">Q</span> <span data-lang-key="helpQ">查看作品詳細資訊</span>
                     <span class="help-key">MOUSE</span> <span data-lang-key="helpMouse">環視四周</span>
                     <span class="help-key">U</span> <span data-lang-key="helpU">開啟設定選單</span>
                     <span class="help-key">E</span> <span data-lang-key="helpE">切換展覽樓層</span>
@@ -209,6 +257,14 @@
         </div>
     </div>
 
+    <div id="detail-overlay">
+        <div class="detail-right">
+            <div class="detail-title" id="detail-title">作品標題</div>
+            <div class="detail-info" id="detail-info">作品詳細描述內容...</div>
+            <div class="detail-footer">Press Q to close</div>
+        </div>
+    </div>
+
     <div id="loading-overlay">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 30px;">
             <div data-lang-key="curatingArtworks">策展中...</div>
@@ -222,7 +278,7 @@
         let scene, camera, renderer, player, pitch, raycaster = new THREE.Raycaster();
         let ambientLight, flashlight, spotLights = [], selectableArt = [];
         let floors = [], currentFloorIdx = 0;
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isDetailOpen = false;
         let canJump = true, velocityY = 0, isLoading = false, isPaused = true, isSettingsOpen = false, isHelpOpen = false;
         let lastTime = performance.now(), frameCount = 0;
 
@@ -265,6 +321,7 @@
                 onlineDesc: "Load external galleries via URL parameters:", onlineStep: "Ensure the repository contains a 'manifest.json' file with media links.",
                 helpWASD: "Movement", helpSpace: "Jump / Sit / Stand", helpMouse: "Look Around", helpU: "Settings Menu", helpE: "Floor Selection", 
                 helpY: "Audio Toggle", helpF: "Flashlight", helpC: "Zoom View",helpCS: "Adjust focus", helpArrows: "Video Seek / Playback",
+                helpQ: "View Artwork Details",
                 tutorialDesc: "Navigate freely in the gallery. Point at artworks to auto-play videos with audio. Hold arrows to fast-forward or rewind. Press Space near the bench to rest.",
                 credits: "Produced by Qimei Technology Studio | CC BY-NC 4.0 Licensed"
             },
@@ -286,6 +343,7 @@
                 onlineDesc: "您可以透過網址參數自動載入 GitHub 上的圖庫。格式如下：", onlineStep: "請確保儲存庫根目錄包含一個 manifest.json 檔案，其中定義了所有媒體資源。",
                 helpWASD: "移動角色", helpSpace: "跳躍 / 坐下 / 站起", helpMouse: "環視四周", helpU: "開啟設定選單", helpE: "切換樓層", 
                 helpY: "靜音開關", helpF: "手電筒開關", helpC: "縮放視角 (望遠鏡)", helpArrows: "影片倒帶 / 快進",
+                helpQ: "查看作品詳細資訊",
                 tutorialDesc: "進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。",
                 credits: "Qimei Technology Studio 製作 創用CC BY-NC 4.0授權"
             }
@@ -357,13 +415,6 @@
             window.addEventListener('resize', onWindowResize);
             
             setTimeout(checkOnlineMode, 100); // 確保 UI 初始化後執行自動載入
-            
-            document.getElementById('canvas-container').addEventListener('click', () => {
-                if (!isLoading && !isPaused && !isSettingsOpen) {
-                    document.body.requestPointerLock();
-                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                }
-            });
         }
 
         function buildGallery() {
@@ -463,27 +514,30 @@
         }
 
         async function getMediaAspect(item) {
-            const isFile = item instanceof File;
-            const url = isFile ? URL.createObjectURL(item) : item.url;
-            const type = item.type;
-            const identifier = isFile ? item.name : url;
+            // 確保提取正確的連結與類型，支援 File 物件或資訊物件
+            const isFileObj = item instanceof File;
+            const media = isFileObj ? item : (item.file || item);
+            const isActualFile = media instanceof File;
+            const url = isActualFile ? URL.createObjectURL(media) : (item.url || "");
+            const type = isActualFile ? media.type : (item.type || "");
+            const identifier = isActualFile ? media.name : url;
 
             return new Promise((resolve, reject) => {
                 if (type.startsWith('image/')) {
                     const img = new Image();
                     img.crossOrigin = "anonymous";
-                    img.onload = () => { resolve(img.width / img.height); if(isFile) URL.revokeObjectURL(url); };
+                    img.onload = () => { resolve(img.width / img.height); if(isActualFile) URL.revokeObjectURL(url); };
                     img.onerror = () => { 
-                        if(isFile) URL.revokeObjectURL(url);
+                        if(isActualFile) URL.revokeObjectURL(url);
                         reject(new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`));
                     };
                     img.src = url;
                 } else {
                     const v = document.createElement('video');
                     v.crossOrigin = "anonymous";
-                    v.onloadedmetadata = () => { resolve(v.videoWidth / v.videoHeight || 1.6); if(isFile) URL.revokeObjectURL(url); };
-                    v.onerror = () => { 
-                        if(isFile) URL.revokeObjectURL(url);
+                    v.onloadedmetadata = () => { resolve(v.videoWidth / v.videoHeight || 1.6); if(isActualFile) URL.revokeObjectURL(url); };
+                    v.onerror = () => {
+                        if(isActualFile) URL.revokeObjectURL(url);
                         reject(new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`));
                     };
                     v.src = url;
@@ -519,7 +573,15 @@
                         currentWallUsed += w + gap;
                     }
                     
-                    floorItems.push({ file: item, aspect });
+                    const hasDetail = !!(item.title || item.info);
+                    floorItems.push({ 
+                        data: item, 
+                        aspect, 
+                        // 只有當 JSON 有定義時才填入，否則為空
+                        title: item.title || '',
+                        info: item.info || '',
+                        hasDetail: hasDetail
+                    });
                     currentIndex++;
                 }
                 if (floorItems.length > 0) curated.push(floorItems);
@@ -530,8 +592,34 @@
 
         async function handleFiles(e) {
             if (isLoading) return;
-            const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
-            if(files.length === 0) return;
+            const allFiles = Array.from(e.target.files);
+            
+            // 線下模式優先尋找 custom.json
+            const customJsonFile = allFiles.find(f => f.name === 'custom.json');
+            let filesToCurate = [];
+
+            if (customJsonFile) {
+                try {
+                    const text = await customJsonFile.text();
+                    const json = JSON.parse(text);
+                    filesToCurate = json.map(item => {
+                        const targetName = item.file || item.url;
+                        // 匹配路徑末尾的文件名
+                        const actualFile = allFiles.find(f => f.webkitRelativePath.endsWith(targetName) || f.name === targetName);
+                        if (actualFile) {
+                            return { ...item, file: actualFile, type: actualFile.type };
+                        }
+                        return null;
+                    }).filter(Boolean);
+                } catch (err) {
+                    console.warn("custom.json parsing failed, falling back to all files.");
+                }
+            }
+
+            if (filesToCurate.length === 0) {
+                filesToCurate = allFiles.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+            }
+            if(filesToCurate.length === 0) return;
 
             try {
                 isLoading = true;
@@ -540,7 +628,7 @@
                 overlay.style.display = 'flex';
                 requestAnimationFrame(() => { overlay.style.opacity = '1'; });
 
-                floors = await curateFloors(files);
+                floors = await curateFloors(filesToCurate);
 
                 document.getElementById('ui-layer').style.opacity = '0';
                 setTimeout(() => { document.getElementById('ui-layer').style.display = 'none'; }, 800);
@@ -616,6 +704,17 @@
                         if (data.record && Array.isArray(data.record)) data = data.record;
                         if (!Array.isArray(data)) throw new Error(t.errorInvalidFormat);
                         
+                        // 解析相對路徑：自動將相對連結補足為完整 URL
+                        const baseDir = loadUrl.substring(0, loadUrl.lastIndexOf('/') + 1);
+                        data = data.map(item => {
+                            if (item.url && typeof item.url === 'string' && !item.url.startsWith('http') && !item.url.startsWith('blob:')) {
+                                // 移除開頭的斜線避免重複路徑，並拼接到根目錄後
+                                const relativePath = item.url.startsWith('/') ? item.url.slice(1) : item.url;
+                                item.url = baseDir + relativePath;
+                            }
+                            return item;
+                        });
+
                         floors = await curateFloors(data);
                         isLoading = false;
                         currentFloorIdx = 0;
@@ -670,6 +769,18 @@
             document.getElementById('help-overlay').style.display = 'none'; 
         }
 
+        function openDetail(artData) {
+            isDetailOpen = true;
+            document.getElementById('detail-title').innerText = artData.title;
+            document.getElementById('detail-info').innerText = artData.info;
+            document.getElementById('detail-overlay').classList.add('active');
+        }
+
+        function closeDetail() {
+            isDetailOpen = false;
+            document.getElementById('detail-overlay').classList.remove('active');
+        }
+
         async function loadFloor(idx, resetPos = false) {
             if (isLoading) return;
             isLoading = true;
@@ -695,7 +806,12 @@
             const floorData = floors[idx];
             let loadedCount = 0;
             const totalItems = floorData.length;
-            const walls = [{ axis: 'x', start: -ROOM.w/2+10, limit: ROOM.w/2-10, pos: {x:0, z:-ROOM.d/2+0.3}, rot: 0 }, { axis: 'z', start: -ROOM.d/2+10, limit: ROOM.d/2-10, pos: {x:ROOM.w/2-0.3, z:0}, rot: -Math.PI/2 }, { axis: 'x', start: -ROOM.w/2+10, limit: ROOM.w/2-10, pos: {x:0, z:ROOM.d/2-0.3}, rot: Math.PI }, { axis: 'z', start: -ROOM.d/2+10, limit: ROOM.d/2-10, pos: {x:-ROOM.w/2+0.3, z:0}, rot: Math.PI/2 }];
+            const walls = [
+                { axis: 'x', start: -ROOM.w/2+10, dir: 1, pos: {x:0, z:-ROOM.d/2+0.3}, rot: 0 },        // 前面：從左(-X)往右(+X)
+                { axis: 'z', start: -ROOM.d/2+10, dir: 1, pos: {x:ROOM.w/2-0.3, z:0}, rot: -Math.PI/2 }, // 右面：從左(-Z)往右(+Z)
+                { axis: 'x', start: ROOM.w/2-10,  dir: -1, pos: {x:0, z:ROOM.d/2-0.3}, rot: Math.PI },   // 後面：從左(+X)往右(-X)
+                { axis: 'z', start: ROOM.d/2-10,  dir: -1, pos: {x:-ROOM.w/2+0.3, z:0}, rot: Math.PI/2 }  // 左面：從左(+Z)往右(-Z)
+            ];
             const wallLimits = [80, 100, 80, 100];
             const gap = 12;
 
@@ -724,18 +840,19 @@
                 if (items.length === 0) continue;
 
                 const totalW = items.reduce((sum, item) => sum + item.w, 0) + (items.length - 1) * gap;
-                let cursor = wall.start + (wallLimits[i] - totalW) / 2; // 計算起始點以達成居中
+                let cursor = (wallLimits[i] - totalW) / 2; // 改為計算相對於牆面起始邊緣的偏移量
 
                 for (const item of items) {
                     loadedCount++;
                     updateLoadingProgress((loadedCount / totalItems) * 100);
                     let texture, vEl = null, h = 9, w = item.w;
                     
-                    const mediaData = item.file;
-                    const isFile = mediaData instanceof File;
-                    const url = isFile ? URL.createObjectURL(mediaData) : mediaData.url;
-                    const type = mediaData.type;
-                    const identifier = isFile ? mediaData.name : url;
+                    const dataObj = item.data;
+                    const media = dataObj instanceof File ? dataObj : (dataObj.file || dataObj);
+                    const isFile = media instanceof File;
+                    const url = isFile ? URL.createObjectURL(media) : (dataObj.url || "");
+                    const type = isFile ? media.type : (dataObj.type || "");
+                    const identifier = isFile ? media.name : url;
 
                     try {
                         if (type.startsWith('video/')) {
@@ -760,7 +877,9 @@
                     artGroup.add(frame);
                     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: texture, roughness: 0.4 }));
                     canvas.position.z = 0.22; artGroup.add(canvas); selectableArt.push(canvas); 
-                    artGroup.position.set(wall.axis === 'x' ? cursor + w/2 : wall.pos.x, 8, wall.axis === 'z' ? cursor + w/2 : wall.pos.z);
+                    canvas.userData.artData = item; // 將作品數據存入 3D 物件中
+                    const finalPos = wall.start + (cursor + w/2) * wall.dir; // 根據牆面方向計算最終世界座標
+                    artGroup.position.set(wall.axis === 'x' ? finalPos : wall.pos.x, 8, wall.axis === 'z' ? finalPos : wall.pos.z);
                     artGroup.rotation.y = wall.rot; scene.add(artGroup);
                     addSpotlight(artGroup, w, h, wall.rot);
                     mediaObjects.push({ video: vEl, parent: artGroup, texture: texture, canvas: canvas });
@@ -885,8 +1004,12 @@
             saveSettings();
         }
 
+        function handlePointerClick() {
+            if (isLoading || isPaused || isSettingsOpen || isHelpOpen || isDetailOpen) return;
+        }
+
         function setupInteractiveControls() {
-            const toggleSettings = () => {
+            const toggleSettings = () => {               
                 isSettingsOpen = !isSettingsOpen;
                 document.activeElement.blur(); // 釋放按鈕焦點，防止空白鍵誤觸
                 if (isSettingsOpen) { document.exitPointerLock(); document.getElementById('settings-panel').style.display = 'block'; }
@@ -948,13 +1071,25 @@
                 }
             };
 
-            document.getElementById('help-trigger').onclick = (e) => { e.stopPropagation(); e.target.blur(); openHelp(); };
+            document.getElementById('help-trigger').onclick = (e) => { e.stopPropagation(); e.target.blur(); openHelp(); };           
+
+            // 點擊事件：處理進入全螢幕與作品點擊
+            document.getElementById('canvas-container').addEventListener('mousedown', (e) => {
+                if (isLoading || isSettingsOpen || isHelpOpen || isDetailOpen) return;
+                
+                if (document.pointerLockElement !== document.body) {
+                    document.body.requestPointerLock();
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    return;
+                }
+            });
 
             document.addEventListener('pointerlockchange', () => {
                 const isLocked = document.pointerLockElement === document.body;
                 if(!isLocked) { 
                     isPaused = true; 
                     if(audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+                    if (isDetailOpen) closeDetail(); // 如果滑鼠鎖定丟失，關閉詳細資訊面板
                 } else { 
                     isPaused = false; 
                     document.getElementById('settings-panel').style.display = 'none'; 
@@ -980,15 +1115,39 @@
                 if(e.code === 'KeyF') { state.flashlightOn = !state.flashlightOn; flashlight.visible = state.flashlightOn; document.getElementById('flashlight-toggle').checked = state.flashlightOn; }
                 if(e.code === 'KeyE' && !isLoading) { currentFloorIdx = (currentFloorIdx + 1) % floors.length; loadFloor(currentFloorIdx, false); }
                 
+                // 如果詳細資訊面板開啟，任何按鍵都會關閉它
+                if (isDetailOpen) {
+                    closeDetail();
+                    e.preventDefault(); // 阻止按鍵的預設行為
+                    return; // 停止處理此按鍵事件
+                }
+
+                // Q 鍵開啟詳細資訊 (只有在面板未開啟時才觸發)
+                // Q 鍵切換詳細資訊
+                if(e.code === 'KeyQ' && !isPaused && !isSettingsOpen && !isHelpOpen) {
+                    if (isDetailOpen) {
+                        closeDetail();
+                    } else {
+                        raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+                        const intersects = raycaster.intersectObjects(selectableArt);
+                        if (intersects.length > 0 && intersects[0].distance < 30) {
+                            const artData = intersects[0].object.userData.artData;
+                            if (artData.hasDetail) openDetail(artData);
+                        }
+                    }
+                }
+
                 if(e.code === 'Space' && !isStandingUp) {
                     e.preventDefault(); // 防止觸發網頁元素的預設行為
-                    if (canBenchInteract || isSitting) {
-                        if (!isSitting) {
+                    if (isSitting) {
+                        isSitting = false; isStandingUp = true;
+                    } else {
+                        if (canBenchInteract) {
                             preSittingPos.copy(player.position); preSittingRotY = player.rotation.y;
                             targetSittingRotY = Math.atan2(player.position.x - benchPos.x, player.position.z - benchPos.z);
                             isSitting = true;
-                        } else { isSitting = false; isStandingUp = true; }
-                    } else if (canJump && !isPaused) { velocityY = state.jumpForce; canJump = false; }
+                        } else if (canJump && !isPaused) { velocityY = state.jumpForce; canJump = false; }
+                    }
                 }
 
                 if(!isSitting && !isStandingUp) {
@@ -1036,7 +1195,7 @@
                     activeVideo.playbackRate = 1.0; 
                     document.querySelectorAll('.ctrl-arrow').forEach(el => el.classList.remove('pressing', 'breath')); showTimerUI();
                 }
-                if(e.code==='KeyW') moveForward=false; if(e.code==='KeyS') moveBackward=false;
+                if(e.code==='KeyW') moveForward=false; if(e.code==='KeyS') moveBackward=false;               
                 if(e.code==='KeyA') moveLeft=false; if(e.code==='KeyD') moveRight=false;
             });
 
@@ -1078,7 +1237,7 @@
             const isLocked = !!document.pointerLockElement;
             const uiLayer = document.getElementById('ui-layer');
             const isInitialScreen = uiLayer.style.display !== 'none';
-            const showPauseMenu = !isLocked && !isSettingsOpen && !isHelpOpen && !isInitialScreen && !isLoading;
+            const showPauseMenu = !isLocked && !isSettingsOpen && !isHelpOpen && !isInitialScreen && !isLoading && !isDetailOpen;
             
             document.getElementById('start-overlay').style.display = showPauseMenu ? 'flex' : 'none';
             document.getElementById('help-trigger').style.display = (isInitialScreen || showPauseMenu) ? 'flex' : 'none';
@@ -1087,6 +1246,10 @@
             const prompt = document.getElementById('interaction-prompt');
             const reticle = document.getElementById('reticle');
             const targetFov = isZooming ? targetZoomFov : state.fov;
+
+            // Q 鍵提示燈
+            const qPrompt = document.getElementById('q-prompt');
+
             currentVisualFov += (targetFov - currentVisualFov) * 0.15;
             if (Math.abs(camera.fov - currentVisualFov) > 0.01) { camera.fov = currentVisualFov; camera.updateProjectionMatrix(); }
 
@@ -1097,7 +1260,7 @@
                 const pointedCanvas = (intersectsArt.length > 0 && intersectsArt[0].distance < 30) ? intersectsArt[0].object : null;
                 const distToBench = player.position.distanceTo(benchPos);
                 canBenchInteract = intersectsBench.length > 0 && distToBench < 10;
-
+                
                 const isInteractionBlocked = isPaused || isSettingsOpen || isHelpOpen;
 
                 let shouldBeVisible = state.reticleVisible;
@@ -1117,7 +1280,12 @@
                 lastPointedCanvas = pointedCanvas;
 
                 reticle.style.opacity = shouldBeVisible ? '1' : '0';
-                reticle.classList.toggle('active', shouldBeVisible && (!!pointedCanvas || (canBenchInteract && !isSitting)));
+                const canInteractWithArt = pointedCanvas && pointedCanvas.userData.artData.hasDetail;
+                reticle.classList.toggle('active', shouldBeVisible && (canInteractWithArt || (canBenchInteract && !isSitting)));
+
+                // 控制 Q 鍵提示燈的顯示與閃爍
+                qPrompt.style.opacity = (canInteractWithArt && !isDetailOpen && !isInteractionBlocked) ? '1' : '0';
+                qPrompt.classList.toggle('active', (canInteractWithArt && !isDetailOpen && !isInteractionBlocked));
 
                 if (isSitting && !isInteractionBlocked) {
                     player.position.lerp(new THREE.Vector3(0, 5.8, 0), 0.08);
