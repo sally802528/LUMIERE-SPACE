@@ -7,6 +7,7 @@ LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可�
 [👉 立即體驗 LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)
 
 >目前更新到1.13版本，此為公開版本，關於版本訊息請見Releases。
+
 >想要建立公開的線上畫廊嗎，請見[開發教學](Online.md)
 
 <br>[觀看Youtube宣傳片](https://youtu.be/HWK8KETxxZM)
