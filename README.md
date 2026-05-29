@@ -1,4 +1,4 @@
-# LUMIERE-SPACE (流光空間) 🖼️
+# LUMIERE SPACE (流光空間) 🖼️
 
 > **目前最簡單，最好上手的3D模擬畫廊。**
 
