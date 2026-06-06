@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Lumière Space v1.13</title>
+    <title>Lumière Space v1.14</title>
     <style>
         :root {
             --accent-color: rgba(255, 255, 255, 0.9);
@@ -10,8 +10,23 @@
             --border-glass: rgba(255, 255, 255, 0.1);
         }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Optima', 'Segoe UI', sans-serif; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        #canvas-container { width: 100%; height: 100%; }
+        /* 展場標題樣式 */
+        #floor-title-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; z-index: 4000; pointer-events: none; opacity: 0;
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.08); /* 更淡的背景 */
+            backdrop-filter: blur(10px);     /* 更輕微的毛玻璃效果 */
+            -webkit-backdrop-filter: blur(10px);
+        }
+        #floor-title-overlay.active { opacity: 1; transition: opacity 0.8s ease-out; }
+        .f-title { font-size: 52px; letter-spacing: 35px; font-weight: 100; color: #fff; margin-bottom: 15px; text-transform: uppercase; white-space: nowrap; }
+        .f-subtitle { font-size: 14px; letter-spacing: 12px; color: rgba(255,255,255,0.4); text-transform: uppercase; white-space: nowrap; }
+        .f-hint { font-size: 10px; letter-spacing: 4px; color: rgba(255,255,255,0.3); margin-top: 180px; text-transform: uppercase; }
+
+        body, html { margin: 0; padding: 0; width: 100vw; height: 100dvh; overflow: hidden; background-color: #000; font-family: 'Optima', 'Segoe UI', sans-serif; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; overscroll-behavior: none; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
         
         #fps-counter { position: absolute; top: 20px; left: 20px; color: var(--accent-color); font-family: 'Courier New', monospace; font-size: 11px; z-index: 2500; display: none; letter-spacing: 2px; padding: 6px 12px; background: var(--bg-glass); backdrop-filter: blur(10px); }
         
@@ -131,12 +146,57 @@
         .detail-info::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         
         .detail-footer { margin-top: 40px; font-size: 10px; letter-spacing: 3px; opacity: 0.3; text-transform: uppercase; }
+
+        /* 行動裝置專屬樣式 */
+        #joystick-container { position: absolute; bottom: 40px; left: 40px; width: 160px; height: 160px; background: rgba(255,255,255,0.05); border-radius: 50%; display: none; z-index: 4500; touch-action: none; border: 1px solid rgba(255,255,255,0.15); }
+        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 65px; height: 65px; background: rgba(255,255,255,0.25); border-radius: 50%; transform: translate(-50%, -50%); backdrop-filter: blur(8px); }
+        #touch-cursor { 
+            position: absolute; width: 100px; height: 100px; border: 3px solid rgba(255,255,255,0.6); 
+            border-radius: 50%; pointer-events: none; display: none; z-index: 5000; transform: translate(-50%, -50%); 
+            overflow: hidden;
+        }
+        #touch-cursor-fill { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.4); border-radius: 50%; transform: scale(0); 
+            transition: transform 3s linear; transform-origin: center;
+        }
+        #touch-cursor.charging #touch-cursor-fill { transform: scale(1); }
+        #mobile-action-menu { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            display: none; flex-direction: column; gap: 15px; z-index: 5100;
+        }
+        
+        /* 使用 class 判斷行動裝置，確保穩定性 */
+        body.is-mobile #joystick-container { display: block; }
+        body.is-mobile #detail-overlay { width: 100%; }
+        body.is-mobile #help-trigger { display: none !important; }
+        
+        @media (max-width: 850px) {
+            #video-controls { bottom: 200px; left: 30px; }
+            #floor-control { top: 20px; right: 20px; padding: 8px 20px; }
+            #settings-trigger { bottom: 20px; right: 20px; padding: 8px 20px; font-size: 10px; }
+            .f-title { font-size: 28px; letter-spacing: 15px; }
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div id="canvas-container"></div>
     <div id="reticle"></div>
+    <div id="floor-title-overlay">
+        <div class="f-title" id="f-title"></div>
+        <div class="f-subtitle" id="f-subtitle"></div>
+        <div class="f-hint" data-lang-key="moveClose">移動以關閉標題</div>
+    </div>
+
+    <div id="joystick-container"><div id="joystick-knob"></div></div>
+    <div id="touch-cursor"><div id="touch-cursor-fill"></div></div>
+    <div id="mobile-action-menu">
+        <button class="glass-btn" id="m-btn-detail">VIEW DETAILS</button>
+        <button class="glass-btn" id="m-btn-sit">SIT DOWN</button>
+        <button class="glass-btn" id="m-btn-close">CLOSE</button>
+    </div>
+
     <div id="fps-counter">FPS: 0</div>
     <div id="q-prompt">Q</div>
     <div id="interaction-prompt">PRESS [SPACE] TO SIT</div>
@@ -196,7 +256,7 @@
     <div id="start-overlay">
         <h2 data-lang-key="pause" style="pointer-events: none;">暫停</h2>
         <button class="glass-btn" id="resume-btn" data-lang-key="resumeSession" style="padding: 15px 60px; font-size: 14px;">返回</button>
-        <p data-lang-key="credits" style="margin-top: 45px; font-size: 10px; opacity: 0.5; letter-spacing: 2px;">Qimei Technology Studio 製作 創用CC BY-NC 4.0授權</p>
+        <p data-lang-key="credits" style="margin-top: 45px; font-size: 10px; opacity: 0.5; letter-spacing: 2px;">Qimei Technology Studio 製作 創用CC BY-NC-SA 4.0授權</p>
     </div>
 
     <div id="help-overlay">
@@ -279,13 +339,14 @@
         let ambientLight, flashlight, spotLights = [], selectableArt = [];
         let floors = [], currentFloorIdx = 0;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isDetailOpen = false;
-        let canJump = true, velocityY = 0, isLoading = false, isPaused = true, isSettingsOpen = false, isHelpOpen = false;
+        let canJump = true, velocityY = 0, moveVelocity = new THREE.Vector2(0, 0), isLoading = false, isPaused = true, isSettingsOpen = false, isHelpOpen = false, floorTitleRequested = false;
         let lastTime = performance.now(), frameCount = 0;
 
         let isZooming = false, targetZoomFov = 25, currentVisualFov = 60;
         let activeVideo = null, longPressTimer = null, isLongPressActive = false, timerHideTimeout = null;
         let rewindInterval = null; 
         let videoStatusText = ""; // 用於顯示 Replayed 狀態
+        let floorTitleTimer = null;
 
         let bench, isSitting = false, isStandingUp = false, canBenchInteract = false;
         const benchPos = new THREE.Vector3(0, 0, 0);
@@ -295,6 +356,8 @@
         let currentLang = 'en'; // Default to English
         let focusHideTimer = null, lastPointedCanvas = null, isReticleFocusHidden = false;
         let lastFailedUrl = null;
+        let lastLightUpdateTime = 0;
+        let lastCullingTime = 0;
         // 效能優化用變數
         const _viewDir = new THREE.Vector3();
         const _tempVec = new THREE.Vector3();
@@ -322,8 +385,8 @@
                 helpWASD: "Movement", helpSpace: "Jump / Sit / Stand", helpMouse: "Look Around", helpU: "Settings Menu", helpE: "Floor Selection", 
                 helpY: "Audio Toggle", helpF: "Flashlight", helpC: "Zoom View",helpCS: "Adjust focus", helpArrows: "Video Seek / Playback",
                 helpQ: "View Artwork Details",
-                tutorialDesc: "Navigate freely in the gallery. Point at artworks to auto-play videos with audio. Hold arrows to fast-forward or rewind. Press Space near the bench to rest.",
-                credits: "Produced by Qimei Technology Studio | CC BY-NC 4.0 Licensed"
+                moveClose: "Move to close title", tutorialDesc: "Navigate freely in the gallery. Point at artworks to auto-play videos with audio. Hold arrows to fast-forward or rewind. Press Space near the bench to rest.",
+                credits: "Produced by Qimei Technology Studio | CC BY-NC-SA 4.0 Licensed"
             },
             zh: {
                 enterGallery: "進入展覽", floors: "樓層 (E)", engine: "設定 (U)",
@@ -344,8 +407,8 @@
                 helpWASD: "移動角色", helpSpace: "跳躍 / 坐下 / 站起", helpMouse: "環視四周", helpU: "開啟設定選單", helpE: "切換樓層", 
                 helpY: "靜音開關", helpF: "手電筒開關", helpC: "縮放視角 (望遠鏡)", helpArrows: "影片倒帶 / 快進",
                 helpQ: "查看作品詳細資訊",
-                tutorialDesc: "進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。",
-                credits: "Qimei Technology Studio 製作 創用CC BY-NC 4.0授權"
+                moveClose: "移動以關閉標題", tutorialDesc: "進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。",
+                credits: "Qimei Technology Studio 製作 創用CC BY-NC-SA 4.0授權"
             }
         };
 
@@ -354,6 +417,13 @@
         const defaultState = { ...state };
         const ROOM = { w: 100, d: 120, h: 22 }; 
         const mediaObjects = []; 
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) document.body.classList.add('is-mobile');
+
+        let touchX = 0, touchY = 0, isTouching = false;
+        let joyX = 0, joyY = 0, joyTouchId = null;
+        let interactionTimer = null, interactionTarget = null;
 
         function saveSettings() {
             try {
@@ -547,19 +617,31 @@
 
         async function curateFloors(allFiles) {
             const curated = [];
+            const metadataMap = {};
+            const mediaOnly = [];
+            
+            // 分離 metadata 與媒體檔案
+            allFiles.forEach(item => {
+                if (item && item.g_level !== undefined) {
+                    metadataMap[item.g_level] = { title: item.g_title, subtitle: item.g_subtitle };
+                } else {
+                    mediaOnly.push(item);
+                }
+            });
+
             let currentIndex = 0;
             const wallLimits = [80, 100, 80, 100]; // 對應 4 面牆的可用長度
             const gap = 12;
-            const total = allFiles.length;
+            const total = mediaOnly.length;
 
-            while (currentIndex < allFiles.length) {
+            while (currentIndex < mediaOnly.length) {
                 const floorItems = [];
                 let wallIdx = 0;
                 let currentWallUsed = 0;
 
-                while (currentIndex < allFiles.length && wallIdx < 4) {
+                while (currentIndex < mediaOnly.length && wallIdx < 4) {
                     updateLoadingProgress((currentIndex / total) * 100);
-                    const item = allFiles[currentIndex];
+                    const item = mediaOnly[currentIndex];
                     const aspect = await getMediaAspect(item);
                     let w = 9 * aspect;
                     if (w > 28) w = 28;
@@ -584,7 +666,11 @@
                     });
                     currentIndex++;
                 }
-                if (floorItems.length > 0) curated.push(floorItems);
+                if (floorItems.length > 0) {
+                    const floorIdx = curated.length;
+                    floorItems.metadata = metadataMap[floorIdx] || null;
+                    curated.push(floorItems);
+                }
             }
             updateLoadingProgress(100);
             return curated;
@@ -603,6 +689,9 @@
                     const text = await customJsonFile.text();
                     const json = JSON.parse(text);
                     filesToCurate = json.map(item => {
+                        // 如果是展場標題定義項目 (g_level)，直接保留，不需匹配物理檔案
+                        if (item && item.g_level !== undefined) return item;
+
                         const targetName = item.file || item.url;
                         // 匹配路徑末尾的文件名
                         const actualFile = allFiles.find(f => f.webkitRelativePath.endsWith(targetName) || f.name === targetName);
@@ -707,10 +796,12 @@
                         // 解析相對路徑：自動將相對連結補足為完整 URL
                         const baseDir = loadUrl.substring(0, loadUrl.lastIndexOf('/') + 1);
                         data = data.map(item => {
-                            if (item.url && typeof item.url === 'string' && !item.url.startsWith('http') && !item.url.startsWith('blob:')) {
+                            // 同時支援 url 或 file 屬性的相對路徑修正
+                            const pathKey = item.url ? 'url' : (item.file ? 'file' : null);
+                            if (pathKey && typeof item[pathKey] === 'string' && !item[pathKey].startsWith('http') && !item[pathKey].startsWith('blob:')) {
                                 // 移除開頭的斜線避免重複路徑，並拼接到根目錄後
-                                const relativePath = item.url.startsWith('/') ? item.url.slice(1) : item.url;
-                                item.url = baseDir + relativePath;
+                                const relativePath = item[pathKey].startsWith('/') ? item[pathKey].slice(1) : item[pathKey];
+                                item[pathKey] = baseDir + relativePath;
                             }
                             return item;
                         });
@@ -771,6 +862,7 @@
 
         function openDetail(artData) {
             isDetailOpen = true;
+            if (isMobile) hideTouchCursor();
             document.getElementById('detail-title').innerText = artData.title;
             document.getElementById('detail-info').innerText = artData.info;
             document.getElementById('detail-overlay').classList.add('active');
@@ -778,16 +870,46 @@
 
         function closeDetail() {
             isDetailOpen = false;
+            document.getElementById('detail-title').innerText = "";
+            document.getElementById('detail-info').innerText = "";
             document.getElementById('detail-overlay').classList.remove('active');
+        }
+
+        function showFloorTitle(idx) {
+            if (isMobile) hideTouchCursor();
+            if (isDetailOpen) closeDetail();
+            const meta = floors[idx]?.metadata;
+            if (!meta || !meta.title || meta.title === "關閉" || isPaused) return;
+
+            document.getElementById('f-title').innerText = meta.title;
+            document.getElementById('f-subtitle').innerText = meta.subtitle || "";
+            const overlay = document.getElementById('floor-title-overlay');
+            overlay.classList.add('active');
+
+            if (floorTitleTimer) clearTimeout(floorTitleTimer);
+            floorTitleTimer = setTimeout(() => {
+                overlay.classList.remove('active');
+                floorTitleTimer = null;
+            }, 5000);
+        }
+
+        function hideFloorTitle() {
+            if (floorTitleTimer) {
+                clearTimeout(floorTitleTimer);
+                floorTitleTimer = null;
+            }
+            document.getElementById('floor-title-overlay').classList.remove('active');
         }
 
         async function loadFloor(idx, resetPos = false) {
             if (isLoading) return;
             isLoading = true;
             updateLoadingProgress(0);
+            moveVelocity.set(0, 0);
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
             requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+            if (isDetailOpen) closeDetail();
 
             // 等待遮罩動畫進行到足夠暗，才開始清理與更換畫作
             await new Promise(r => setTimeout(r, 1500));
@@ -865,6 +987,9 @@
                                 setTimeout(resolve, 5000); 
                             });
                             texture = new THREE.VideoTexture(vEl);
+                            texture.minFilter = THREE.LinearFilter;
+                            texture.magFilter = THREE.LinearFilter;
+                            texture.generateMipmaps = false;
                         } else { 
                             texture = await texLoader.loadAsync(url); 
                         }
@@ -899,11 +1024,14 @@
             
             document.getElementById('loading-overlay').style.display = 'none'; 
             isLoading = false; 
-            if (document.getElementById('ui-layer').style.display === 'none') document.body.requestPointerLock();
+            if (isMobile) isPaused = false;
+            else if (document.getElementById('ui-layer').style.display === 'none') document.body.requestPointerLock();
+
+            floorTitleRequested = true;
         }
 
         function addSpotlight(targetGroup, w, h, rotation) {
-            const light = new THREE.SpotLight(0xffffff, state.spotIntensity, 50, state.spotAngle, 0.8, 1.2);
+            const light = new THREE.SpotLight(0xffffff, state.spotIntensity, 45, state.spotAngle, 0.8, 1.2);
             light.position.set(targetGroup.position.x + Math.sin(rotation)*7, targetGroup.position.y + 8, targetGroup.position.z + Math.cos(rotation)*7);
             const target = new THREE.Object3D(); target.position.copy(targetGroup.position);
             scene.add(target); light.target = target; scene.add(light); spotLights.push(light);
@@ -994,6 +1122,7 @@
             if(musicGain) musicGain.gain.value = state.musicVolume;
             document.getElementById('fps-counter').style.display = state.fpsVisible ? 'block' : 'none';
             flashlight.visible = state.flashlightOn;
+            lastLightUpdateTime = 0; // 強制下次更新燈光
 
             // Reset active video's current time
             if (activeVideo) {
@@ -1012,8 +1141,17 @@
             const toggleSettings = () => {               
                 isSettingsOpen = !isSettingsOpen;
                 document.activeElement.blur(); // 釋放按鈕焦點，防止空白鍵誤觸
-                if (isSettingsOpen) { document.exitPointerLock(); document.getElementById('settings-panel').style.display = 'block'; }
-                else { document.body.requestPointerLock(); document.getElementById('settings-panel').style.display = 'none'; }
+                if (isSettingsOpen) { 
+                    document.exitPointerLock(); 
+                    document.getElementById('settings-panel').style.display = 'block'; 
+                }
+                else { 
+                    const isInitialScreen = document.getElementById('ui-layer').style.display !== 'none';
+                    if (!isInitialScreen && !isLoading) {
+                        document.body.requestPointerLock(); 
+                    }
+                    document.getElementById('settings-panel').style.display = 'none'; 
+                }
             };
 
             document.getElementById('lang-switcher').addEventListener('click', (e) => {
@@ -1035,7 +1173,8 @@
 
             document.getElementById('resume-btn').onclick = (e) => {
                 e.target.blur(); // 釋放焦點
-                document.body.requestPointerLock();
+                if (isMobile) isPaused = false;
+                else document.body.requestPointerLock();
             };
 
             document.getElementById('settings-trigger').onclick = (e) => { 
@@ -1075,10 +1214,11 @@
 
             // 點擊事件：處理進入全螢幕與作品點擊
             document.getElementById('canvas-container').addEventListener('mousedown', (e) => {
+                hideFloorTitle();
                 if (isLoading || isSettingsOpen || isHelpOpen || isDetailOpen) return;
                 
                 if (document.pointerLockElement !== document.body) {
-                    document.body.requestPointerLock();
+                    if (!isMobile) document.body.requestPointerLock();
                     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                     return;
                 }
@@ -1086,22 +1226,97 @@
 
             document.addEventListener('pointerlockchange', () => {
                 const isLocked = document.pointerLockElement === document.body;
-                if(!isLocked) { 
+                if(!isLocked && !isMobile) { 
                     isPaused = true; 
                     if(audioCtx && audioCtx.state === 'running') audioCtx.suspend();
                     if (isDetailOpen) closeDetail(); // 如果滑鼠鎖定丟失，關閉詳細資訊面板
-                } else { 
+                    hideFloorTitle();
+                    // 暫停時強制停止所有影片與隱藏 UI
+                    moveVelocity.set(0, 0);
+                    mediaObjects.forEach(obj => { if(obj.video) obj.video.pause(); });
+                    document.getElementById('video-controls').style.opacity = '0';
+                    document.getElementById('video-timer').style.opacity = '0';
+                } else if (isLocked) { 
                     isPaused = false; 
                     document.getElementById('settings-panel').style.display = 'none'; 
                     isSettingsOpen = false; 
                     if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    if (!isLoading && floors.length > 0 && floorTitleRequested) {
+                        showFloorTitle(currentFloorIdx);
+                        floorTitleRequested = false;
+                    }
                 }
             });
+
+            // --- Mobile Touch Events ---
+            if (isMobile) {
+                const joyContainer = document.getElementById('joystick-container');
+                const joyKnob = document.getElementById('joystick-knob');
+                const touchCursor = document.getElementById('touch-cursor');
+
+                window.addEventListener('touchstart', e => {
+                    for (let t of e.changedTouches) {
+                        const rect = joyContainer.getBoundingClientRect();
+                        if (t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom) {
+                            joyTouchId = t.identifier;
+                        } else {
+                            isTouching = true;
+                            touchX = t.clientX; touchY = t.clientY;
+                            touchCursor.style.display = 'block';
+                            touchCursor.style.left = touchX + 'px';
+                            touchCursor.style.top = touchY + 'px';
+                        }
+                    }
+                }, { passive: false });
+
+                window.addEventListener('touchmove', e => {
+                    for (let t of e.changedTouches) {
+                        if (t.identifier === joyTouchId) {
+                            const rect = joyContainer.getBoundingClientRect();
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
+                            let dx = t.clientX - centerX, dy = t.clientY - centerY;
+                            const dist = Math.min(80, Math.sqrt(dx*dx + dy*dy));
+                            const angle = Math.atan2(dy, dx);
+                            joyX = (Math.cos(angle) * dist) / 80;
+                            joyY = (Math.sin(angle) * dist) / 80;
+                            joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
+                        } else if (isTouching && !isPaused && !isDetailOpen) {
+                            const mX = t.clientX - touchX;
+                            const mY = t.clientY - touchY;
+                            player.rotation.y -= mX * 0.004;
+                            pitch.rotation.x -= mY * 0.004;
+                            pitch.rotation.x = Math.max(-1.5, Math.min(1.5, pitch.rotation.x));
+                            touchX = t.clientX; touchY = t.clientY;
+                            touchCursor.style.left = touchX + 'px';
+                            touchCursor.style.top = touchY + 'px';
+                        }
+                    }
+                }, { passive: false });
+
+                window.addEventListener('touchend', e => {
+                    for (let t of e.changedTouches) {
+                        if (t.identifier === joyTouchId) {
+                            joyTouchId = null; joyX = 0; joyY = 0;
+                            joyKnob.style.transform = 'translate(-50%, -50%)';
+                        } else {
+                            isTouching = false;
+                            touchCursor.style.display = 'none';
+                            hideTouchCursor();
+                        }
+                    }
+                });
+
+                document.getElementById('m-btn-close').onclick = hideMobileMenu;
+                document.getElementById('m-btn-detail').onclick = () => { if(interactionTarget?.userData?.artData) openDetail(interactionTarget.userData.artData); hideMobileMenu(); };
+                document.getElementById('m-btn-sit').onclick = () => { isSitting = true; hideMobileMenu(); };
+            }
 
             window.addEventListener('wheel', e => { if(isZooming && !isPaused) { e.preventDefault(); targetZoomFov = Math.max(5, Math.min(state.fov - 5, targetZoomFov + e.deltaY * 0.05)); } }, { passive: false });
 
             window.addEventListener('keydown', e => {
-                if(e.code === 'KeyU' && !e.ctrlKey && !e.altKey && !e.metaKey) { 
+                hideFloorTitle();
+                if(e.code === 'KeyU' && !e.ctrlKey && !e.altKey && !e.metaKey && !isHelpOpen && !isDetailOpen) { 
                     e.preventDefault(); 
                     toggleSettings(); 
                     return; 
@@ -1230,11 +1445,23 @@
             return current + diff * lerpFactor;
         }
 
+        function hideTouchCursor() {
+            const cursor = document.getElementById('touch-cursor');
+            cursor.classList.remove('charging');
+            if (interactionTimer) { clearTimeout(interactionTimer); interactionTimer = null; }
+            interactionTarget = null;
+        }
+
+        function hideMobileMenu() {
+            document.getElementById('mobile-action-menu').style.display = 'none';
+            isPaused = false;
+        }
+
         function animate() {
             requestAnimationFrame(animate);
 
             // 根據當前狀態，管理暫停選單的顯示，確保在任何游標解鎖的情況下都能正確顯示
-            const isLocked = !!document.pointerLockElement;
+            const isLocked = isMobile ? !isPaused : !!document.pointerLockElement;
             const uiLayer = document.getElementById('ui-layer');
             const isInitialScreen = uiLayer.style.display !== 'none';
             const showPauseMenu = !isLocked && !isSettingsOpen && !isHelpOpen && !isInitialScreen && !isLoading && !isDetailOpen;
@@ -1253,8 +1480,13 @@
             currentVisualFov += (targetFov - currentVisualFov) * 0.15;
             if (Math.abs(camera.fov - currentVisualFov) > 0.01) { camera.fov = currentVisualFov; camera.updateProjectionMatrix(); }
 
-            if (!isLoading) {
-                raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            if (!isLoading && !isPaused) {
+                if (isMobile && isTouching) {
+                    raycaster.setFromCamera(new THREE.Vector2((touchX/window.innerWidth)*2-1, -(touchY/window.innerHeight)*2+1), camera);
+                } else {
+                    raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+                }
+                
                 const intersectsArt = raycaster.intersectObjects(selectableArt);
                 const intersectsBench = raycaster.intersectObjects(bench.children);
                 const pointedCanvas = (intersectsArt.length > 0 && intersectsArt[0].distance < 30) ? intersectsArt[0].object : null;
@@ -1262,9 +1494,34 @@
                 canBenchInteract = intersectsBench.length > 0 && distToBench < 10;
                 
                 const isInteractionBlocked = isPaused || isSettingsOpen || isHelpOpen;
+                const isFloorTitleActive = document.getElementById('floor-title-overlay').classList.contains('active');
+
+                // 行動端 3 秒自動互動邏輯
+                if (isMobile && isTouching && !isInteractionBlocked) {
+                    const target = pointedCanvas || (canBenchInteract ? bench : null);
+                    if (target) {
+                        if (target !== interactionTarget) {
+                            hideTouchCursor();
+                            interactionTarget = target;
+                            document.getElementById('touch-cursor').classList.add('charging');
+                            interactionTimer = setTimeout(() => {
+                                isPaused = true;
+                                const menu = document.getElementById('mobile-action-menu');
+                                menu.style.display = 'flex';
+                                document.getElementById('m-btn-detail').style.display = pointedCanvas?.userData?.artData?.hasDetail ? 'block' : 'none';
+                                document.getElementById('m-btn-sit').style.display = canBenchInteract ? 'block' : 'none';
+                                hideTouchCursor();
+                                isTouching = false;
+                                document.getElementById('touch-cursor').style.display = 'none';
+                            }, 3000);
+                        }
+                    } else {
+                        hideTouchCursor();
+                    }
+                }
 
                 let shouldBeVisible = state.reticleVisible;
-                if (isZooming || isInteractionBlocked) shouldBeVisible = false;
+                if (isZooming || isInteractionBlocked || isFloorTitleActive || isMobile) shouldBeVisible = false;
                 
                 // 條件2: 長時間注視同一作品時隱藏
                 if (pointedCanvas && pointedCanvas === lastPointedCanvas) {
@@ -1300,15 +1557,23 @@
                     prompt.innerText = translations[currentLang].pressSpaceToSit;
 
                     if ((document.pointerLockElement || isSettingsOpen) && !isPaused) {
+                        if(moveForward || moveBackward || moveLeft || moveRight) hideFloorTitle();
+                        
                         const dir = new THREE.Vector3(); camera.getWorldDirection(dir); dir.y = 0; dir.normalize();
                         const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0,1,0));
-                        let dX = 0, dZ = 0;
-                        if(moveForward) { dX += dir.x * state.speed; dZ += dir.z * state.speed; }
-                        if(moveBackward) { dX -= dir.x * state.speed; dZ -= dir.z * state.speed; }
-                        if(moveLeft) { dX -= side.x * state.speed; dZ -= side.z * state.speed; }
-                        if(moveRight) { dX += side.x * state.speed; dZ += side.z * state.speed; }
+                        
+                        let targetX = 0, targetZ = 0;
+                        if(moveForward) { targetX += dir.x * state.speed; targetZ += dir.z * state.speed; }
+                        if(moveBackward) { targetX -= dir.x * state.speed; targetZ -= dir.z * state.speed; }
+                        if(moveLeft) { targetX -= side.x * state.speed; targetZ -= side.z * state.speed; }
+                        if(moveRight) { targetX += side.x * state.speed; targetZ += side.z * state.speed; }
 
-                        const nextX = player.position.x + dX, nextZ = player.position.z + dZ;
+                        // 慣性邏輯：根據是否有輸入決定加速度或摩擦力
+                        const accel = (moveForward || moveBackward || moveLeft || moveRight) ? 0.08 : 0.15;
+                        moveVelocity.x = THREE.MathUtils.lerp(moveVelocity.x, targetX, accel);
+                        moveVelocity.y = THREE.MathUtils.lerp(moveVelocity.y, targetZ, accel);
+
+                        const nextX = player.position.x + moveVelocity.x, nextZ = player.position.z + moveVelocity.y;
                         const borderW = ROOM.w/2 - 5, borderD = ROOM.d/2 - 5;
                         const oldX = player.position.x, oldZ = player.position.z;
 
@@ -1345,41 +1610,52 @@
                 let foundObj = null; 
                 const now = performance.now();
 
-                // 節流處理：每 200ms 才搜尋一次最近的影片，大幅降低 CPU 負擔
-                if (!isPaused && uiLayer.style.display === 'none' && now - lastVideoSearchTime > 200) {
+                // 節流處理：優化搜尋與剔除邏輯
+                if (uiLayer.style.display === 'none' && now - lastVideoSearchTime > 150) {
                     lastVideoSearchTime = now;
                     camera.getWorldDirection(_viewDir);
                     
+                    let minDistanceSq = 35 * 35; 
                     if (pointedCanvas) {
                         foundObj = mediaObjects.find(obj => obj.canvas === pointedCanvas && obj.video);
                     }
 
-                    if (!foundObj) {
-                        let minDistanceSq = 25 * 25; // 使用距離平方進行快速比較
-                        for (const obj of mediaObjects) {
-                            if (!obj.video) continue;
-                            const dSq = player.position.distanceToSquared(obj.parent.position);
-                            if (dSq < minDistanceSq) {
-                                _tempVec.subVectors(obj.parent.position, player.position).normalize();
-                                if (_viewDir.dot(_tempVec) > 0.85) {
-                                    minDistanceSq = dSq;
-                                    foundObj = obj;
-                                }
+                    for (const obj of mediaObjects) {
+                        if (!obj.video) continue;
+                        const dSq = player.position.distanceToSquared(obj.parent.position);
+                        
+                        // 遠程剔除：如果影片太遠 (> 60米)，徹底暫停以節省資源
+                        if (dSq > 60 * 60) {
+                            if (!obj.video.paused) obj.video.pause();
+                            continue; 
+                        }
+
+                        if (!foundObj && dSq < minDistanceSq) {
+                            _tempVec.subVectors(obj.parent.position, player.position).normalize();
+                            if (_viewDir.dot(_tempVec) > 0.85) {
+                                minDistanceSq = dSq;
+                                foundObj = obj;
                             }
                         }
                     }
-
-                    // 更新目前注視的影片目標引用
                     const foundVideo = foundObj ? foundObj.video : null;
                     if (activeVideo !== foundVideo) activeVideo = foundVideo;
+                }
+
+                // 燈光管理：每 300ms 檢查一次，確保射燈狀態符合全域設定
+                if (now - lastLightUpdateTime > 300) {
+                    lastLightUpdateTime = now;
+                    spotLights.forEach(l => { 
+                        l.visible = state.spotVisible; 
+                    });
                 }
 
                 // 影片音量漸變與播放狀態全域管理 (每幀執行以確保平滑度)
                 for (const obj of mediaObjects) {
                     if (!obj.video) continue;
                     
-                    const isTarget = (obj.video === activeVideo && !state.audioMuted);
-                    const targetVol = isTarget ? state.videoVolume : 0;
+                    const isTarget = (obj.video === activeVideo);
+                    const targetVol = (isTarget && !state.audioMuted) ? state.videoVolume : 0;
                     const v = obj.video;
 
                     // 平滑過渡音量
@@ -1388,12 +1664,14 @@
                         if (Math.abs(v.volume - targetVol) < 0.001) v.volume = targetVol;
                     }
 
-                    // 嚴格控制播放行為：只有當該影片是當前注視目標時才准許啟動播放
-                    if (isTarget && v.paused) {
-                        v.muted = false; 
-                        v.play().catch(() => {});
+                    // 控制播放行為：注視即播放，無視靜音設定
+                    if (isTarget) {
+                        if (v.paused) {
+                            v.muted = state.audioMuted; // 同步靜音狀態，確保符合瀏覽器自動播放政策
+                            v.play().catch(() => {});
+                        }
                     } else if (!isTarget && v.volume === 0 && !v.paused) {
-                        // 只有當不再是目標且音量已完全淡出至 0 時，才執行暫停
+                        // 只有當不再是目標且音量已完全淡出至 0 時，才執行暫停以節省資源
                         v.pause();
                     }
                 }
@@ -1425,3 +1703,13 @@
     </script>
 </body>
 </html>
+<!--七美科技工作室 製作與授權聲明
+1. 本作品由七美科技工作室（Qimei Studio）監製。
+2. 本作品涵蓋人工智慧協助作業，本工作室負責測試、審核、部署與維護，確保內容完整無誤。
+3. 依據七美科技工作室 服務條款與隱私權政策之AI作品相關規定
+，任何使用AI作業之作品，由於AI生成內容的特殊性，無法明確歸屬著作權，作品包含人工作業，以公平性原則，才取創用CC授權公開，開源不收費。
+4. 本作品授權方式為 CC BY-NC-SA 4.0，詳情請見 https://creativecommons.org/licenses/by-nc-sa/4.0/。
+5. 授權內容僅包含本作品的原始碼與設計，使用者可在遵守授權條款的前提下，自行修改、使用與分享，但不得用於商業用途。
+6. 使用者在使用本作品時，應遵守相關法律法規，不得利用本作品從事任何違法或侵權行為。
+7. 七美科技工作室保留對本作品的最終解釋權與修改權，並有權隨時更新授權聲明以反映法律變更或業務需求。
+-->
