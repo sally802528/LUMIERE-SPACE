@@ -44,7 +44,9 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 
 ## manifest.json 定義檔編寫教學
 
-檔案結構很簡單，就是這個檔案的連結跟類型
+定義檔是專為設計Lumiere Space的程式編碼
+<br>以josn檔之編寫邏輯運行，這個功能可以控制展場資訊、佈展順序、作品細項
+<br>manifest.json的結構很簡單，最基礎的定義檔，就是一串連結跟類型
 <br>url要寫上每個檔案的網址，以儲存庫網址+檔名組成，儲存庫網址會在Actions等處標記
 ```
 [
