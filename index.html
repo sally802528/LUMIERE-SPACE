@@ -496,7 +496,7 @@
             floorMesh.rotation.x = -Math.PI / 2;
             scene.add(floorMesh);
 
-            const wallTex = loader.load('https://sally802528.github.io/LUMIERE-SPACE/Poliigon_ConcreteWorn_8690_BaseColor.jpg');
+            const wallTex = loader.load('https://lumierespace.qts.dpdns.org/Poliigon_ConcreteWorn_8690_BaseColor.jpg');
             wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
             wallTex.repeat.set(4, 1);
             const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xffffff, roughness: 0.8 });
@@ -570,7 +570,7 @@
 
         function addCustomMarbleBench() {
             const loader = new THREE.TextureLoader();
-            const marbleUrl = 'https://sally802528.github.io/LUMIERE-SPACE/Poliigon_StoneQuartzite_8060_BaseColor.jpg';
+            const marbleUrl = 'https://lumierespace.qts.dpdns.org/Poliigon_StoneQuartzite_8060_BaseColor.jpg';
             const marbleTex = loader.load(marbleUrl);
             marbleTex.wrapS = marbleTex.wrapT = THREE.RepeatWrapping; marbleTex.repeat.set(2, 1);
             const marbleMat = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.1, metalness: 0.05 });
