@@ -3,10 +3,10 @@
 最新版本，加入了Github網頁線上圖庫連結系統
 <br>你可以在網址中接入你的Github儲存庫網址，即可使用線上版本，你可以把連結分享給他人，讓大家也一起體驗你獨一無二的展覽
 
-[👉 立即體驗 LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)
+[👉 立即體驗 LUMIERE-SPACE](https://lumierespace.qts.dpdns.org/)
 
-[👉 範例網站 ](https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS)
-https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
+[👉 範例網站 ](https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS)
+https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 <br>你可以進入範例網站，其中包含結構呈現，與畫作順序
 
 ---
@@ -36,7 +36,7 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 7.  確定完成後回到Actions，並檢查Pages是否正常部署完成
 
 ### 開始觀展
-1.  點擊進入 [LUMIERE-SPACE](https://sally802528.github.io/LUMIERE-SPACE/)。
+1.  點擊進入 [LUMIERE-SPACE](https://lumierespace.qts.dpdns.org/)。
 2.  網址後方寫上 /?load=使用者名稱/儲存庫名稱 (例如：/?load=sally802528/TEST_online_LS)
 3.  按下Enter，如果步驟正常，網頁就會讀取並佈展了
 
@@ -150,12 +150,13 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 2. 格式錯誤 (Invalid Format)：manifest.json 內容必須是一個 JSON 陣列 [...]，不能是單一物件。
 3. 連線失敗/CORS 阻擋：請確保媒體連結是正確無誤，以及網路是否正常。
 4. 沒有聲音：如果瀏覽器預設為禁止自動播放聲音，請進入展場後點擊一次畫面以解鎖音訊，或檢查「設定」中的音量。
-5. 無法載入圖片但是有寫manifest.json:請確認你的圖庫圖片是否正常，manifest.json連結類型是否正確。
-6. 我可以用其他的平台放置檔案嗎:建議使用Github，因為Github相對穩定，並且不會有CORS 阻擋，因為畫廊系統本身就是屬於Github pages。
-7. 我本地端可以使用定義功能嗎:可以，你可以改用custom.json來做到相同的定義功能，要注意，custom.json不使用url，而是使用file參數，此外亦同
-8. 顯示json錯誤:檢查json格式是否正確，每個檔案是否用逗號隔開，有沒有多餘的錯誤空格或換行
-9. 畫作排序規則:畫作是按照manifest.json，從上而下的順序排列，可以參考範例網站
-10. 沒有顯示層級標題:檢查是否定義了g_level層級參數，如果缺少此參數，會導致該項定義錯誤而失效
+5. 無法載入圖片但是有寫manifest.json：請確認你的圖庫圖片是否正常，manifest.json連結類型是否正確。
+6. 我可以用其他的平台放置檔案嗎：建議使用Github，因為Github相對穩定，並且不會有CORS 阻擋，因為畫廊系統本身就是屬於Github pages。
+7. 我本地端可以使用定義功能嗎：可以，你可以改用custom.json來做到相同的定義功能，要注意，custom.json不使用url，而是使用file參數，此外亦同
+8. 顯示json錯誤：檢查json格式是否正確，每個檔案是否用逗號隔開，有沒有多餘的錯誤空格或換行
+9. 畫作排序規則：畫作是按照manifest.json，從上而下的順序排列，可以參考範例網站
+10. 沒有顯示層級標題：檢查是否定義了g_level層級參數，如果缺少此參數，會導致該項定義錯誤而失效
+11. 顯示Github Page顯示404：於最新版本，已將網頁轉為Cloudflare代理，Github網頁已關閉，僅供代碼開源查看。請更改網站連結
 ---
 ## 開發者的一封信
 親愛的專業用戶你好
@@ -180,7 +181,7 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
   4. 不要藉由圖片散播任何政治、惡意軟體、木馬、極端內容等
   5. 不要附上包含上述的文字連結在檔案說明參數
 
-本工作室絕不容忍任何未成年性侵害的影像流通於平台
+本工作室絕不容忍任何未成年性侵害、詐騙、暴力血腥、侵犯肖像權的影像流通於平台
 <br>如果查獲相關內容，請務必與本工作室聯絡，我們將會盡快對其處理並封鎖該連結
 <br>並前往該資料庫來源進行檢舉，Github條款明令禁止包含未成年性內容的儲存庫
 
@@ -194,13 +195,13 @@ https://sally802528.github.io/LUMIERE-SPACE/?load=sally802528/TEST_online_LS
 ---
 ## 🧑‍🔧 錯誤報告
 
-程式可能含有未知的錯誤，如果你發現了問題，請聯絡我們:Sally802528@gmail.com，並務必完整詳細的說明問題與你的使用環境
+程式可能含有未知的錯誤，如果你發現了問題，請聯絡我們:service@support.qts.dpdns.org，並務必完整詳細的說明問題與你的使用環境
 
 ---
 
 ## 📜 許可證
 
-<a href="https://sally802528.github.io/LUMIERE-SPACE/">LUMIERE-SPACE</a> © 2026 by <a href="https://qimei.framer.website/">Qimei Technology Studio</a> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International</a><br><br><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+<a href="https://lumierespace.qts.dpdns.org/">LUMIERE-SPACE</a> © 2026 by <a href="https://qimei.framer.website/">Qimei Technology Studio</a> is licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International</a><br><br><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">  <img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
 
 ---
 
