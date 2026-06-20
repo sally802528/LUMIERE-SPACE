@@ -5,7 +5,7 @@
 LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可以透過導入本地資料夾，將自己的圖片與影片瞬間轉化為一場沉浸式的私人藝術展覽。
 
 [👉 立即體驗 LUMIERE-SPACE](https://lumierespace.qts.dpdns.org/)
->注意!我們將本專案的主服務器轉換為Cloudflare代理，此舉為了能夠擁有更安全的連線保護，以及未來我們將會對這個平台增加更多功能
+>注意!我們將本專案的主服務器轉換為Cloudflare代理，此舉為了能夠擁有更快更安全的連線保護，以及未來我們將會對這個平台增加更多功能
 
 >目前更新到1.14版本，此為公開版本，關於版本訊息請見[Releases](https://github.com/sally802528/LUMIERE-SPACE/releases)。
 
