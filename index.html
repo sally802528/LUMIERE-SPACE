@@ -1011,10 +1011,14 @@
                 formatNoticeDate(notice.date);
 
             // 保留換行功能
-            bodyElement.innerHTML =
-                (notice.content || '')
-                    .replace(/\\n/g, '<br>')
-                    .replace(/\n/g, '<br>');
+            const normalizedContent = String(notice.content || '').replace(/\\n/g, '\n');
+            bodyElement.textContent = '';
+            normalizedContent.split(/\r?\n/).forEach((line, idx) => {
+                if (idx > 0) {
+                    bodyElement.appendChild(document.createElement('br'));
+                }
+                bodyElement.appendChild(document.createTextNode(line));
+            });
 
             // 左側公告列表選取狀態
             document
@@ -1038,14 +1042,19 @@
         }
         async function openNotice() {
             const noticeListDiv = document.getElementById('notice-list');
-            noticeListDiv.innerHTML = '';
+            noticeListDiv.replaceChildren();
             document.getElementById('notice-display-title').innerText = '';
             document.getElementById('notice-display-date').innerText = '';
             document.getElementById('notice-display-body').innerText = '';
             document.getElementById('notice-overlay').style.display = 'flex';
 
             // 顯示載入中提示
-            noticeListDiv.innerHTML = `<p style="font-size: 11px; opacity: 0.4; letter-spacing: 2px;">LOADING...</p>`;
+            const loadingMessage = document.createElement('p');
+            loadingMessage.style.fontSize = '11px';
+            loadingMessage.style.opacity = '0.4';
+            loadingMessage.style.letterSpacing = '2px';
+            loadingMessage.textContent = 'LOADING...';
+            noticeListDiv.appendChild(loadingMessage);
 
             let notices = null;
 
@@ -1068,10 +1077,14 @@
             // 優先使用遠端資料，否則 fallback 回 translations
             notices = _fetchedNotices || translations[currentLang].notices || [];
 
-            noticeListDiv.innerHTML = '';
+            noticeListDiv.replaceChildren();
 
             if (!notices || notices.length === 0) {
-                noticeListDiv.innerHTML = `<p style="font-size: 12px; opacity: 0.7;">${translations[currentLang].noNoticesAvailable}</p>`;
+                const emptyMessage = document.createElement('p');
+                emptyMessage.style.fontSize = '12px';
+                emptyMessage.style.opacity = '0.7';
+                emptyMessage.textContent = translations[currentLang].noNoticesAvailable;
+                noticeListDiv.appendChild(emptyMessage);
                 return;
             }
 
@@ -1377,7 +1390,7 @@
                 
                 addCommandLog(`結論: ${isGL2 && hwAccel ? "硬體足以流暢運行此空間。" : "建議優化系統設定以提升流暢度。"}`, "GpuTest");
             } else if (cmd === '/clear') {
-                document.getElementById('command-log-container').innerHTML = '';
+                document.getElementById('command-log-container').replaceChildren();
                 document.getElementById('command-input').value = '/';
             } else if (cmd.trim() !== "" && cmd.trim() !== "/") {
                 addCommandLog(`未定義的指令: ${cmd}`, 'error');
