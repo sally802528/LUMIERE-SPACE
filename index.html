@@ -520,14 +520,32 @@
             }
         }
 
+        // 偵測瀏覽器系統語言
+        function detectBrowserLanguage() {
+            const browserLang = navigator.language || navigator.userLanguage || 'en';
+            // 檢查是否為中文（包括簡體中文 zh-CN、繁體中文 zh-TW 等）
+            if (browserLang.toLowerCase().startsWith('zh')) {
+                return 'zh';
+            }
+            return 'en';
+        }
+
         function loadSettings() {
             const savedSettings = localStorage.getItem('lumiereEliteSettings');
             if (savedSettings) {
                 try {
                     const parsed = JSON.parse(savedSettings);
                     Object.assign(state, parsed.state);
-                    currentLang = parsed.lang || 'en';
-                } catch (e) { console.error("Failed to parse settings, using defaults.", e); }
+                    // 本地設定優先：如果有保存的語言設定，使用本地設定；否則使用偵測到的瀏覽器語言
+                    currentLang = parsed.lang || detectBrowserLanguage();
+                } catch (e) { 
+                    console.error("Failed to parse settings, using defaults.", e);
+                    // 解析失敗時，仍然嘗試使用偵測到的瀏覽器語言
+                    currentLang = detectBrowserLanguage();
+                }
+            } else {
+                // 沒有本地設定時，自動使用偵測到的瀏覽器語言
+                currentLang = detectBrowserLanguage();
             }
         }
 
