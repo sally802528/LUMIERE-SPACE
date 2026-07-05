@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Lumière Space v1.14.3</title>
+    <link rel="icon" href="https://lumierespace.qts.dpdns.org/Texture/favicon.ico" type="image/x-icon">
     <style>
         :root {
             --accent-color: rgba(255, 255, 255, 0.9);
@@ -181,6 +182,25 @@
             padding: 15px; margin-bottom: 10px; cursor: pointer;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 4px; font-size: 12px; transition: all 0.3s ease;
+        }
+        #notice-display-body {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+        .notice-link {
+            color: #8fd2ff;
+            text-decoration: underline;
+            text-decoration-color: rgba(143, 210, 255, 0.45);
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+        }
+        .notice-link:hover {
+            color: #ffffff;
+            text-decoration-color: #ffffff;
         }
         
         /* 命令行日誌樣式 */
@@ -603,7 +623,7 @@
             floorMesh.rotation.x = -Math.PI / 2;
             scene.add(floorMesh);
 
-            const wallTex = loader.load('https://lumierespace.qts.dpdns.org/Poliigon_ConcreteWorn_8690_BaseColor.jpg?v=' + Date.now());
+            const wallTex = loader.load('https://lumierespace.qts.dpdns.org/Texture/Poliigon_ConcreteWorn_8690_BaseColor.jpg?v=' + Date.now());
             wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
             wallTex.repeat.set(4, 1);
             wallMaterial = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xffffff, roughness: 0.8 });
@@ -677,7 +697,7 @@
         function addCustomMarbleBench() {
             const loader = new THREE.TextureLoader();
             loader.setCrossOrigin('anonymous');
-            const marbleUrl = 'https://lumierespace.qts.dpdns.org/Poliigon_StoneQuartzite_8060_BaseColor.jpg';
+            const marbleUrl = 'https://lumierespace.qts.dpdns.org/Texture/Poliigon_StoneQuartzite_8060_BaseColor.jpg';
             const marbleTex = loader.load(marbleUrl + '?v=' + Date.now());
             marbleTex.wrapS = marbleTex.wrapT = THREE.RepeatWrapping; marbleTex.repeat.set(2, 1);
             marbleMaterial = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.1, metalness: 0.05 });
@@ -1028,14 +1048,57 @@
             dateElement.innerText =
                 formatNoticeDate(notice.date);
 
-            // 保留換行功能
+            // 保留換行功能，並把 [文字](URL) 解析為可點擊連結
             const normalizedContent = String(notice.content || '').replace(/\\n/g, '\n');
-            bodyElement.textContent = '';
-            normalizedContent.split(/\r?\n/).forEach((line, idx) => {
+            bodyElement.replaceChildren();
+            bodyElement.style.userSelect = 'none';
+            bodyElement.style.webkitUserSelect = 'none';
+            bodyElement.style.mozUserSelect = 'none';
+
+            const lines = normalizedContent.split(/\r?\n/);
+            lines.forEach((line, idx) => {
                 if (idx > 0) {
                     bodyElement.appendChild(document.createElement('br'));
                 }
-                bodyElement.appendChild(document.createTextNode(line));
+
+                const lineContainer = document.createElement('div');
+                lineContainer.style.display = 'block';
+                lineContainer.style.marginBottom = '4px';
+                lineContainer.style.userSelect = 'none';
+                lineContainer.style.webkitUserSelect = 'none';
+                lineContainer.style.mozUserSelect = 'none';
+
+                const linkPattern = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+                let lastIndex = 0;
+                let match;
+
+                while ((match = linkPattern.exec(line)) !== null) {
+                    if (match.index > lastIndex) {
+                        lineContainer.appendChild(
+                            document.createTextNode(line.slice(lastIndex, match.index))
+                        );
+                    }
+
+                    const link = document.createElement('a');
+                    link.className = 'notice-link';
+                    link.href = match[2];
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = match[1];
+                    lineContainer.appendChild(link);
+
+                    lastIndex = match.index + match[0].length;
+                }
+
+                if (lastIndex < line.length) {
+                    lineContainer.appendChild(document.createTextNode(line.slice(lastIndex)));
+                }
+
+                if (lineContainer.childNodes.length === 0) {
+                    lineContainer.textContent = line;
+                }
+
+                bodyElement.appendChild(lineContainer);
             });
 
             // 左側公告列表選取狀態
