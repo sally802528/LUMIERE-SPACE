@@ -8,7 +8,7 @@
 [👉 範例網站 ](https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS)
 https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 <br>你可以進入範例網站，其中包含結構呈現，與畫作順序
-
+> 建造畫廊太麻煩了嗎，你可以下載Lumiere Tools加快你的工作效率
 ---
 
 ## 使用前需要
