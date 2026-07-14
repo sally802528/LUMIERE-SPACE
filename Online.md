@@ -130,7 +130,6 @@ https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 ### 本地端定義檔
 你可以在本地端增加 custom.json 來做到類似manifest.json
 <br>相較於manifest.json的url，網址，在本地端使用"file"定義檔案，直接輸入檔名
-<br>而使用本地端定義檔，要注意，本地端不會有錯誤提示，如果錯誤會直接視同定義無效，直接進入正常的原畫廊
 <br>此檔案需放在您電腦中圖片所在的指定媒體資料夾內
 <br>並且一樣是只有定義的檔案才會顯示
 <br>格式如下
