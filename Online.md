@@ -28,7 +28,7 @@ https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 
 ### 準備工作
 1.  登入Github並建立儲存庫。
-2.  將您想要展示的檔案放入該儲存庫中，由於檔案大小限制，本功能建議使用一般JPG檔。
+2.  將您想要展示的檔案放入該儲存庫中。
 3.  新增manifest.json檔案。
 4.  完成後回到manifest.json檔案，並按照格式編寫檔案，範例請見下方教學。
 5.  檢查資料是否正常存放
