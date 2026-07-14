@@ -14,7 +14,7 @@ https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 ## 使用前需要
 注意，線上展覽需要些許資訊能力，以確保你能夠正確的了解並架設
 以下是你需要的基本項目:
-* **Github Pages架設**：這個功能本質上就是透過Github Page功能將儲存庫的資料透過代碼轉交到網頁中。
+* **Github儲存庫架設**：這個功能本質上就是透過Github儲存庫的資料透過代碼轉交到網頁中。
 * **json編寫能力**：你需要簡單的概念去編寫必要的json檔，以確保網頁能正常讀取你的資料庫。
 
 ---
@@ -30,10 +30,8 @@ https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 1.  登入Github並建立儲存庫。
 2.  將您想要展示的檔案放入該儲存庫中，由於檔案大小限制，本功能建議使用一般JPG檔。
 3.  新增manifest.json檔案。
-4.  進入儲存庫設定，並點選Pages，尋找Build and deployment其中之Branch項目，選擇 main 後按 Save 
-5.  完成後進入Actions，並檢查Pages是否正常部署完成，完成後複製部署得專屬網址
-6.  完成後回到manifest.json檔案，並按照格式編寫檔案，範例請見下方教學。
-7.  確定完成後回到Actions，並檢查Pages是否正常部署完成
+4.  完成後回到manifest.json檔案，並按照格式編寫檔案，範例請見下方教學。
+5.  檢查資料是否正常存放
 
 ### 開始觀展
 1.  點擊進入 [LUMIERE-SPACE](https://lumierespace.qts.dpdns.org/)。
@@ -166,12 +164,13 @@ https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 3. 連線失敗/CORS 阻擋：請確保媒體連結是正確無誤，以及網路是否正常。
 4. 沒有聲音：如果瀏覽器預設為禁止自動播放聲音，請進入展場後點擊一次畫面以解鎖音訊，或檢查「設定」中的音量。
 5. 無法載入圖片但是有寫manifest.json：請確認你的圖庫圖片是否正常，manifest.json連結類型是否正確。
-6. 我可以用其他的平台放置檔案嗎：建議使用Github，因為Github相對穩定，並且不會有CORS 阻擋，因為畫廊系統本身就是屬於Github pages。
-7. 我本地端可以使用定義功能嗎：可以，你可以改用custom.json來做到相同的定義功能，要注意，custom.json不使用url，而是使用file參數，此外亦同
-8. 顯示json錯誤：檢查json格式是否正確，每個檔案是否用逗號隔開，有沒有多餘的錯誤空格或換行
-9. 畫作排序規則：畫作是按照manifest.json，從上而下的順序排列，可以參考範例網站
-10. 沒有顯示層級標題：檢查是否定義了g_level層級參數，如果缺少此參數，會導致該項定義錯誤而失效
-11. 顯示Github Page顯示404：於最新版本，已將網頁轉為Cloudflare代理，Github網頁已關閉，僅供代碼開源查看。請更改網站連結
+6. 我可以用其他的平台放置檔案嗎：建議使用Github，因為Github相對穩定，並且不會有CORS 阻擋。
+7. 我本地端可以使用定義功能嗎：可以，你可以改用custom.json來做到相同的定義功能，要注意，custom.json不使用url，而是使用file參數，此外亦同。
+8. 顯示json錯誤：檢查json格式是否正確，每個檔案是否用逗號隔開，有沒有多餘的錯誤空格或換行。
+9. 畫作排序規則：畫作是按照manifest.json，從上而下的順序排列，可以參考範例網站。
+10. 沒有顯示層級標題：檢查是否定義了g_level層級參數，如果缺少此參數，會導致該項定義錯誤而失效。
+11. 顯示Github Page顯示404：於最新版本，已將網頁轉為Cloudflare代理，Github網頁已關閉，僅供代碼開源查看。請更改網站連結。
+12. 是否需啟用Github Pages：不一定，即使沒有啟用，只要您的儲存庫公開，系統依然可以正常讀取。
 ---
 ## 開發者的一封信
 親愛的專業用戶你好
