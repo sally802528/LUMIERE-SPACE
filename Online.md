@@ -8,7 +8,7 @@
 [👉 範例網站 ](https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS)
 https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 <br>你可以進入範例網站，其中包含結構呈現，與畫作順序
-> 建造畫廊太麻煩了嗎，你可以下載Lumiere Tools加快你的工作效率
+> 建造畫廊太麻煩了嗎，你可以[下載Lumiere Tools](https://lumierespace.qts.dpdns.org/Lumiere_Tools.bat)加快你的工作效率
 ---
 
 ## 使用前需要
@@ -41,6 +41,8 @@ https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 ---
 
 ## Lumiere Tools使用教學
+
+[按此下載](https://lumierespace.qts.dpdns.org/Lumiere_Tools.bat)
 為了減少編寫定義檔要編寫大量的程式碼，為此新增自動批量新增生成定義檔的工具
 [Lumiere Tools](Lumiere_Tools.bat)批次檔
 功能包含
