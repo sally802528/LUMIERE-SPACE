@@ -58,6 +58,7 @@ LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可�
 | **W / A / S / D** | 前、左、後、右移動 |
 | **F** | 開啟 / 關閉 手電筒 |
 | **E** | 切換樓層 |
+| **M** | 切換歌曲 |
 | **Q** | 開啟作品說明 |
 | **Y** | 開啟 / 關閉 音樂與環境音 (不影響腳步聲) |
 | **U** | 開啟設定介面 (可調整音量、環境參數等) |
@@ -82,6 +83,21 @@ LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可�
 
 系統部份功能會依據你是否看向畫作而做出變化
 如當你沒有看向影片畫作時，將會暫停影片播放
+
+---
+## 🎵 背景音樂列表
+
+本系統預設5首輕音樂、鋼琴曲，增加觀賞的體驗
+<br>我們在收錄時，以各大平台中尋找允許使用與無版權音樂等來源
+<br>如果我們不小心收入到您的歌曲，侵犯到您的權益，請與我們聯絡
+<br>如該畫廊屬於線上畫廊，可能會是第三方創作者所使用，如有此情形，請查找畫廊開發者來源
+| 系統編號 | 曲名 | 作者/作曲 |
+| :--- | :--- | :--- |
+| **music1** | Valley Sunset | Alejandro Magaña |
+| **music2** | Expectations | Nikita Kondrashev |
+| **music3** | Tchaikovsky: The Sleeping Beauty, Ballet Suite Op. 66: Finale | 柴可夫斯基 |
+| **music4** | Gymnopédie No.1 | 艾瑞克·薩提 |
+| **music5** | Tchaikovsky: The Seasons, Op. 37a: X. October. Autumn Song | 柴可夫斯基 |
 
 ---
 
