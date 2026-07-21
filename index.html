@@ -1626,51 +1626,30 @@
         function formatNoticeDate(dateStr) {
             if (!dateStr) return "";
 
-            let y,m,d;
+            const normalized = String(dateStr).trim();
+            let parsedDate = null;
 
-            // Date物件
-            if (dateStr instanceof Date) {
-                y = dateStr.getFullYear();
-                m = String(dateStr.getMonth()+1).padStart(2,'0');
-                d = String(dateStr.getDate()).padStart(2,'0');
-            }
-            else {
-                let str = String(dateStr);
-
-                // 移除時間
-                str = str
-                    .replace(/T.*/, '')
-                    .replace(/\s+\d+:\d+:\d+.*/, '');
-
-                const match = str.match(
-                    /(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/
-                );
-
-                if(!match) return str;
-
-                y = match[1];
-                m = match[2].padStart(2,'0');
-                d = match[3].padStart(2,'0');
+            if (normalized instanceof Date) {
+                parsedDate = normalized;
+            } else {
+                const tryDate = new Date(normalized);
+                if (!isNaN(tryDate.getTime())) {
+                    parsedDate = tryDate;
+                }
             }
 
-            // 自動判斷是否中文
-            const lang =
-                String(currentLang || navigator.language || '')
-                .toLowerCase();
-
-            const isChinese =
-                lang.includes('zh') ||
-                lang.includes('tw') ||
-                lang.includes('zh_tw') ||
-                lang.includes('cn');
-
-            // 中文格式
-            if(isChinese){
-                return `${y}年${m}月${d}日`;
+            if (!parsedDate) {
+                return normalized;
             }
 
-            // 英文格式
-            return `${y}-${m}-${d}`;
+            const y = parsedDate.getFullYear();
+            const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+            const d = String(parsedDate.getDate()).padStart(2, '0');
+
+            const lang = String(currentLang || navigator.language || '').toLowerCase();
+            const isChinese = lang.includes('zh') || lang.includes('tw') || lang.includes('zh_tw') || lang.includes('cn');
+
+            return isChinese ? `${y}年${m}月${d}日` : `${y}-${m}-${d}`;
         }
 
 
