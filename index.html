@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Lumière Space v1.14.4</title>
+    <title>Lumière Space v1.14.5</title>
     <link rel="icon" href="https://lumierespace.qts.dpdns.org/Texture/favicon.ico" type="image/x-icon">
     <style>
         :root {
@@ -580,14 +580,14 @@
                 confirmEnter: "CONFIRM", notice: "Notice", noNoticesAvailable: "No notices available.",
                 notices: [
                     {
-                        title: "Welcome to Lumière Space!",
+                        title: "Warning!",
                         date: "2023-10-27",
-                        content: "We are thrilled to welcome you to our virtual gallery. Explore the curated artworks and enjoy the immersive experience. Don't forget to check out the settings panel (U) for customization options!"
+                        content: "If you saw this message, you are not connected to the correct database! Please check your network connection or try refreshing the page."
                     },
                     {
                         title: "New Features Update",
                         date: "2023-10-20",
-                        content: "Version 1.14.4 brings improved performance, better mobile controls, and enhanced visual effects. We hope you enjoy the updates!"
+                        content: "Version 1.14.5 brings improved performance, better mobile controls, and enhanced visual effects. We hope you enjoy the updates!"
                     },
                     { title: "CORS Issue Resolved", date: "2023-10-15", content: "We have addressed the cross-origin resource sharing (CORS) issues for external textures. Please ensure your server is correctly configured for optimal experience." }
                 ],
@@ -614,14 +614,14 @@
                 help: "說明", helpTitle: "使用說明", controlsTitle: "操作控制", tutorialTitle: "使用教學", onlineTitle: "線上圖庫連接", notice: "公告", noNoticesAvailable: "目前沒有公告。",
                 notices: [
                     {
-                        title: "注意！這是系統內建公告",
+                        title: "警告！",
                         date: "2023-10-27",
-                        content: "如果你看到這個文章，代表你沒有正確連接到我們的公告系統。請確認你的網路連線是否正常，或是嘗試重新整理頁面。"
+                        content: "如果你看到這個訊息，代表你沒有正確連接到我們的公告系統。請確認你的網路連線是否正常，或是嘗試重新整理頁面。"
                     },
                     {
                         title: "新功能更新",
                         date: "2023-10-20",
-                        content: "版本 1.14.4 帶來了性能提升、更好的行動裝置控制和增強的視覺效果。希望您喜歡這些更新！"
+                        content: "版本 1.14.5 帶來了性能提升、更好的行動裝置控制和增強的視覺效果。希望您喜歡這些更新！"
                     },
                     { title: "CORS 問題已解決", date: "2023-10-15", content: "我們已解決外部材質的跨來源資源共享 (CORS) 問題。請確保您的伺服器已正確配置以獲得最佳體驗。" }
                 ],
@@ -1146,6 +1146,276 @@
                 roughness: parseValue('PBR_R', 0.4),
                 envMapIntensity: parseValue('PBR_S', 1)
             };
+        }
+
+        function getArtworkMLText(item) {
+            if (!item) return '';
+            const mlValue = item?.ML ?? item?.ml ?? item?.mlText ?? '';
+            if (typeof mlValue === 'string' && mlValue.trim()) return mlValue.trim();
+            if (item?.data) {
+                const nestedMl = item.data.ML ?? item.data.ml ?? item.data.mlText ?? '';
+                if (typeof nestedMl === 'string' && nestedMl.trim()) return nestedMl.trim();
+            }
+            if (item?.file) {
+                const fileMl = item.file.ML ?? item.file.ml ?? item.file.mlText ?? '';
+                if (typeof fileMl === 'string' && fileMl.trim()) return fileMl.trim();
+            }
+            return '';
+        }
+
+        function parseArtworkML(mlText) {
+            if (typeof mlText !== 'string' || !mlText.trim()) return null;
+
+            mlText = mlText
+                .replace(/<\s*(?:\\r\\n|\\r|\\n|\r|\n|[rn]|\s)\s*>/gi, '<br>')
+                .replace(/<\s*br\s*\/?\s*>/gi, '<br>')
+                .replace(/<\s*newline\s*>/gi, '<br>')
+                .replace(/\r\n|\r|\n/g, '<br>')
+                .replace(/<->/g, '<sep-solid>')
+                .replace(/<\*>/g, '<sep-dotted>');
+
+            const blocks = [];
+            let currentText = '';
+            let currentTag = 'p';
+            let currentColor = null;
+            let pendingColor = null;
+            let lastIndex = 0;
+            const tagRegex = /<\/?(h[123]|p|color|br|sep-solid|sep-dotted|\\n)(?:\s*=\s*([#0-9A-Fa-f]{3,8}))?\s*>/gi;
+
+            const flushCurrentText = () => {
+                const text = currentText.trim();
+                if (text) {
+                    blocks.push({ type: currentTag, text, color: currentColor });
+                }
+                currentText = '';
+            };
+
+            const parseColor = (hex) => {
+                if (!hex) return null;
+                const normalized = hex.trim();
+                if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(normalized)) return null;
+                if (normalized.length === 4) {
+                    return `#${normalized[1]}${normalized[1]}${normalized[2]}${normalized[2]}${normalized[3]}${normalized[3]}`.toUpperCase();
+                }
+                return normalized.toUpperCase();
+            };
+
+            let match;
+            while ((match = tagRegex.exec(mlText)) !== null) {
+                const rawTag = match[0];
+                const tagName = match[1].toLowerCase();
+                const value = match[2];
+
+                if (match.index > lastIndex) {
+                    currentText += mlText.slice(lastIndex, match.index);
+                }
+                lastIndex = match.index + rawTag.length;
+
+                if (tagName === 'color') {
+                    if (rawTag.startsWith('</')) {
+                        pendingColor = null;
+                    } else {
+                        pendingColor = parseColor(value);
+                    }
+                    continue;
+                }
+
+                if (tagName === 'br' || tagName === '\\n') {
+                    flushCurrentText();
+                    blocks.push({ type: 'separator', style: 'newline' });
+                    continue;
+                }
+
+                if (tagName === 'sep-solid') {
+                    flushCurrentText();
+                    const separatorColor = pendingColor ?? currentColor;
+                    blocks.push({ type: 'separator', style: 'solid', color: separatorColor });
+                    pendingColor = null;
+                    currentColor = null;
+                    continue;
+                }
+
+                if (tagName === 'sep-dotted') {
+                    flushCurrentText();
+                    const separatorColor = pendingColor ?? currentColor;
+                    blocks.push({ type: 'separator', style: 'dotted', color: separatorColor });
+                    pendingColor = null;
+                    currentColor = null;
+                    continue;
+                }
+
+                if (rawTag.startsWith('</')) {
+                    flushCurrentText();
+                    currentTag = 'p';
+                    currentColor = null;
+                } else {
+                    flushCurrentText();
+                    currentTag = tagName;
+                    currentColor = pendingColor;
+                    pendingColor = null;
+                }
+            }
+
+            if (lastIndex < mlText.length) {
+                currentText += mlText.slice(lastIndex);
+            }
+            flushCurrentText();
+
+            return blocks.length ? blocks : null;
+        }
+
+        function wrapText(ctx, text, maxWidth) {
+            const words = String(text).split(/(\s+)/).filter(Boolean);
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                const candidate = currentLine ? `${currentLine}${word}` : word;
+                if (ctx.measureText(candidate).width <= maxWidth || currentLine === '') {
+                    currentLine = candidate;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            if (currentLine) lines.push(currentLine);
+            return lines;
+        }
+
+        function createArtworkTextTexture(mlText) {
+            const blocks = parseArtworkML(mlText);
+            if (!blocks || blocks.length === 0) return null;
+
+            const width = 900;
+            const paddingX = 48;
+            const paddingY = 40;
+            const height = Math.round(width * 0.75);
+            let y = paddingY;
+            const linesData = [];
+            const measureCanvas = document.createElement('canvas');
+            const measureCtx = measureCanvas.getContext('2d');
+            if (measureCtx) {
+                measureCtx.textAlign = 'left';
+                measureCtx.textBaseline = 'top';
+            }
+
+            blocks.forEach(block => {
+                if (block.type === 'separator') {
+                    linesData.push({ type: 'separator', style: block.style || 'newline', color: block.color || '#111827' });
+                    y += 18;
+                    return;
+                }
+
+                const fontSize = block.type === 'h1' ? 52 : block.type === 'h2' ? 42 : block.type === 'h3' ? 34 : 28;
+                const font = `600 ${fontSize}px 'Segoe UI', 'Microsoft JhengHei', sans-serif`;
+                if (measureCtx) measureCtx.font = font;
+                const color = block.color || '#111827';
+                const lines = wrapText(measureCtx, block.text, width - paddingX * 2);
+                linesData.push({ type: 'text', font, color, lines, fontSize });
+                y += lines.length * (fontSize + 8);
+                y += 8;
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return null;
+
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+
+            let drawY = paddingY;
+            linesData.forEach(item => {
+                if (item.type === 'separator') {
+                    const separatorColor = item.color || '#111827';
+                    if (item.style === 'solid') {
+                        const lineY = drawY + 8;
+                        ctx.fillStyle = separatorColor;
+                        ctx.fillRect(paddingX, lineY, width - paddingX * 2, 2);
+                        drawY += 20;
+                    } else if (item.style === 'dotted') {
+                        const lineY = drawY + 10;
+                        ctx.fillStyle = separatorColor;
+                        const dotWidth = 6;
+                        const gap = 6;
+                        let x = paddingX;
+                        while (x < width - paddingX) {
+                            ctx.fillRect(x, lineY, dotWidth, 2);
+                            x += dotWidth + gap;
+                        }
+                        drawY += 24;
+                    } else {
+                        drawY += 18;
+                    }
+                    return;
+                }
+                ctx.font = item.font;
+                ctx.fillStyle = item.color;
+                item.lines.forEach(line => {
+                    ctx.fillText(line, paddingX, drawY);
+                    drawY += item.fontSize + 6;
+                });
+                drawY += 10;
+            });
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.encoding = THREE.sRGBEncoding;
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.wrapS = THREE.ClampToEdgeWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
+            texture.generateMipmaps = false;
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createArtworkMLSign(dataObj, artGroup, width, height) {
+            const mlText = getArtworkMLText(dataObj);
+            if (!mlText) return null;
+
+            const signWidth = Math.max(1.2, Math.min(2.4, width * 0.36));
+            const signHeight = Math.max(0.9, Math.min(1.8, signWidth * 0.75));
+            const signDepth = 0.08;
+            const signGroup = new THREE.Group();
+            signGroup.name = 'artwork-ml-sign';
+            if (!window.__artworkMLSigns) window.__artworkMLSigns = [];
+
+            const texture = createArtworkTextTexture(mlText);
+            const frontMaterial = texture
+                ? new THREE.MeshStandardMaterial({ map: texture, color: 0xffffff, roughness: 0.45, metalness: 0.0, emissive: 0x000000, side: THREE.FrontSide })
+                : new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45, metalness: 0.0, emissive: 0x000000 });
+            if (texture) {
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                texture.wrapS = THREE.ClampToEdgeWrapping;
+                texture.wrapT = THREE.ClampToEdgeWrapping;
+                texture.generateMipmaps = false;
+                texture.needsUpdate = true;
+            }
+
+            const signBackMaterial = new THREE.MeshStandardMaterial({ color: 0xf3f4f6, roughness: 0.6, metalness: 0.0, emissive: 0x000000 });
+            const signBody = new THREE.Mesh(
+                new THREE.BoxGeometry(signWidth, signHeight, signDepth * 0.65),
+                [signBackMaterial, signBackMaterial, signBackMaterial, signBackMaterial, frontMaterial, signBackMaterial]
+            );
+            signBody.position.z = -signDepth * 0.65;
+            signBody.renderOrder = 998;
+            signGroup.add(signBody);
+
+            signGroup.position.set(width / 2 + signWidth / 2 + 0.55, -height / 2 + signHeight / 2 + 0.16, -0.2);
+            signGroup.rotation.set(0, 0, 0);
+            signGroup.updateMatrixWorld(true);
+            signGroup.renderOrder = 997;
+            artGroup.add(signGroup);
+
+            if (typeof window !== 'undefined' && Array.isArray(window.__artworkMLSigns)) {
+                window.__artworkMLSigns.push(signGroup);
+            }
+
+            return signGroup;
         }
 
         // 解析 dataObj.code 字串，支援語法如: "rotation=10+=5" 或 "size=1+=0.1#!#delay=1000"
@@ -2014,7 +2284,7 @@
                 addCommandLog("/reload      - 重新讀取目前定義檔與圖片並重佈展", "Help");
                 addCommandLog("/nightsky    - 開啟或關閉夜晚星空彩蛋效果", "Help");
             addCommandLog("/nightsky_a  - 設定星夜效果為持續顯示，並保存本地設定", "Help");
-                addCommandLog("/hello       - 顯示七美科技工作室問候訊息", "Help");
+                addCommandLog("/hello       - 顯示七美科技工作室彩蛋", "Help");
                 addCommandLog("/version     - 顯示當前系統版本號碼", "Help");
                 addCommandLog("/clear       - 清除指令日誌視窗中所有歷史訊息", "Help");
                 addCommandLog("/test_title  - 測試展場標題與副標題顯示效果", "Help");
@@ -2056,7 +2326,7 @@
                     addCommandLog("材質重連失敗: " + err.message, "error");
                 }
 
-                addCommandLog("背景鋼琴音樂與音效重連中...", "Renew");
+                addCommandLog("背景音樂與音效重連中...", "Renew");
                 if (audioCtx) {
                     try {
                         audioCtx.close();
@@ -2107,16 +2377,16 @@
                 ⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣦⡀
                 ⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦
                 ⠀⣿⣿⣿⠟⣡⣶⣿⣿⣷⣦⠙⠛⠉⣉⣿⣿
-                ⢸⣿⣿⠏⣾⣿⣿⣿⠛⣤⣾⣿⡄⣧⢻⣿⣿⡇
-                ⣿⣿⣿⢰⣿⣿⢋⣶⣿⣿⣿⣿⣿⣿⠀⣿⣿⣿
-                ⢸⣿⣿⡄⠟⣴⣿⣿⣿⣿⠿⣿⠃⡿⣸⣿⣿⡇
+                ⢸⣿⣿⠏⣾⣿⣿⣿⠛⣤⣾⣿⡄⣧⢻⣿⣿⡇ 七美科技工作室
+                ⣿⣿⣿⢰⣿⣿⢋⣶⣿⣿⣿⣿⣿⣿⠀⣿⣿⣿   QTS
+                ⢸⣿⣿⡄⠟⣴⣿⣿⣿⣿⠿⣿⠃⡿⣸⣿⣿⡇    祝您觀展愉快
                 ⠀⣿⣿⣿⣦⠻⣿⣿⣿⣿⠿⣌⢿⣄⢿⣿⣿
                 ⠀⠀⠻⣿⣿⣿⣷⣶⣶⣶⣿⣿⣿⣿⣷⠟
                 ⠀⠀⠀⠈⠻⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁
                 ⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉.
                 `, 'Hello');
             } else if (cmd === '/version') {
-                addCommandLog(`Version: v1.14.4`, 'Version');
+                addCommandLog(`Version: v1.14.5`, 'Version');
             } else if (cmd === '/test_wb') {
                 const uaStr = navigator.userAgent;
                 let bName = "Unknown", bVer = "Unknown";
@@ -2202,7 +2472,7 @@
             // 等待遮罩動畫進行到足夠暗，才開始清理與更換畫作
             await new Promise(r => setTimeout(r, 1500));
 
-            mediaObjects.forEach(obj => { if(obj.video) { obj.video.pause(); obj.video.src=""; obj.video.load(); obj.video.remove(); } scene.remove(obj.parent); });
+            mediaObjects.forEach(obj => { if(obj.video) { obj.video.pause(); obj.video.src=""; obj.video.load(); obj.video.remove(); } if(obj.mlSign && obj.mlSign.parent) obj.mlSign.parent.remove(obj.mlSign); scene.remove(obj.parent); });
             spotLights.forEach(l => { scene.remove(l.target); scene.remove(l); });
             mediaObjects.length = 0; spotLights.length = 0; selectableArt = [];
             
@@ -2272,7 +2542,7 @@
                     const w = item.w;
                     const h = item.h;
                     
-                    const dataObj = item.data;
+                    const dataObj = item.data || item;
                     const media = dataObj instanceof File ? dataObj : (dataObj.file || dataObj);
                     const isFile = media instanceof File;
                     const url = isFile ? URL.createObjectURL(media) : (dataObj.url || "");
@@ -2299,70 +2569,37 @@
                     } catch (err) {
                         throw new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`);
                     }
+                    if (texture && item.aspectRatio) {
+                        const mediaAspect = item.mediaAspect || item.displayAspect;
+                        let repeatX = 1;
+                        let repeatY = 1;
+                        let offsetX = 0;
+                        let offsetY = 0;
 
+                        if (mediaAspect > item.aspectRatio) {
+                            repeatX = item.aspectRatio / mediaAspect;
+                            offsetX = (1 - repeatX) / 2;
+                        } else if (mediaAspect < item.aspectRatio) {
+                            repeatY = mediaAspect / item.aspectRatio;
+                            offsetY = (1 - repeatY) / 2;
+                        }
 
+                        texture.wrapS = THREE.ClampToEdgeWrapping;
+                        texture.wrapT = THREE.ClampToEdgeWrapping;
+                        texture.repeat.set(repeatX, repeatY);
+                        texture.offset.set(offsetX, offsetY);
+                        texture.needsUpdate = true;
+                    }
 
+                    const artGroup = new THREE.Group();
 
+                    // 處理整個畫作的旋轉 (包含畫框與畫布)
+                    const rotDegrees = parseFloat(dataObj.rotation || 0);
+                    if (rotDegrees !== 0) {
+                        artGroup.rotation.z = THREE.MathUtils.degToRad(rotDegrees);
+                    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                        if (texture && item.aspectRatio) {
-                                            const mediaAspect = item.mediaAspect || item.displayAspect;
-                                            let repeatX = 1;
-                                            let repeatY = 1;
-                                            let offsetX = 0;
-                                            let offsetY = 0;
-
-                                            if (mediaAspect > item.aspectRatio) {
-                                                repeatX = item.aspectRatio / mediaAspect;
-                                                offsetX = (1 - repeatX) / 2;
-                                            } else if (mediaAspect < item.aspectRatio) {
-                                                repeatY = mediaAspect / item.aspectRatio;
-                                                offsetY = (1 - repeatY) / 2;
-                                            }
-
-                                            texture.wrapS = THREE.ClampToEdgeWrapping;
-                                            texture.wrapT = THREE.ClampToEdgeWrapping;
-                                            texture.repeat.set(repeatX, repeatY);
-                                            texture.offset.set(offsetX, offsetY);
-                                            texture.needsUpdate = true;
-                                        }
-                    
-                                        const artGroup = new THREE.Group();
-
-                                        // 處理整個畫作的旋轉 (包含畫框與畫布)
-                                        const rotDegrees = parseFloat(dataObj.rotation || 0);
-                                        if (rotDegrees !== 0) {
-                                            artGroup.rotation.z = THREE.MathUtils.degToRad(rotDegrees);
-                                        }
-
-                                        const frame = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, h+0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0x030303, metalness: 0.1, roughness: 0.5 }));
+                    const frame = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, h+0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0x030303, metalness: 0.1, roughness: 0.5 }));
                     artGroup.add(frame);
                     const pbr = getArtworkPBR(dataObj);
                     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({
@@ -2373,13 +2610,14 @@
                     }));
                     canvas.position.z = 0.22; artGroup.add(canvas); selectableArt.push(canvas); 
                     canvas.userData.artData = item; // 將作品數據存入 3D 物件中
+                    const mlSign = createArtworkMLSign(dataObj, artGroup, w, h);
                     const finalPos = wall.start + (cursor + w/2) * wall.dir; // 根據牆面方向計算最終世界座標
                     artGroup.position.set(wall.axis === 'x' ? finalPos : wall.pos.x, 8, wall.axis === 'z' ? finalPos : wall.pos.z);
                     artGroup.rotation.y = wall.rot; scene.add(artGroup);
                     addSpotlight(artGroup, w, h, wall.rot);
                     const codeProgram = parseCodeParam(dataObj);
                     const originalSizeMultiplier = getArtworkSizeMultiplier(dataObj);
-                    mediaObjects.push({ video: vEl, parent: artGroup, texture: texture, canvas: canvas, dataObj: dataObj, codeProgram: codeProgram, originalSizeMultiplier });
+                    mediaObjects.push({ video: vEl, parent: artGroup, texture: texture, canvas: canvas, dataObj: dataObj, codeProgram: codeProgram, originalSizeMultiplier, mlSign });
                     cursor += w + gap;
                 }
             }
@@ -3214,12 +3452,3 @@
     </script>
 </body>
 </html>
-<!--七美科技工作室 製作與授權聲明
-1. 本作品由七美科技工作室（Qimei technology Studio）監製。
-2. 本作品涵蓋人工智慧協助作業，本工作室負責測試、審核、部署與維護，確保內容完整無誤。
-3. 依據七美科技工作室 服務條款與隱私權政策之AI作品相關規定,任何使用AI作業之作品，由於AI生成內容的特殊性，無法明確歸屬著作權，作品包含人工作業，以公平性原則，才取創用CC授權公開，開源不收費。
-4. 本作品授權方式為 CC BY-NC-SA 4.0，詳情請見 https://creativecommons.org/licenses/by-nc-sa/4.0/。
-5. 授權內容僅包含本作品的原始碼與設計，使用者可在遵守授權條款的前提下，自行修改、使用與分享，但不得用於商業用途。
-6. 使用者在使用本作品時，應遵守相關法律法規，不得利用本作品從事任何維法或侵權行為。
-7. 七美科技工作室保留對本作品的最終解釋權與修改權，並有權隨時更新授權聲明以反映法律變更或業務需求。
--->
