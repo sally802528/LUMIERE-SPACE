@@ -9,6 +9,8 @@
 https://lumierespace.qts.dpdns.org/?load=sally802528/TEST_online_LS
 <br>你可以進入範例網站，其中包含結構呈現，與畫作順序
 > 建造畫廊太麻煩了嗎，你可以[下載Lumiere Tools](https://lumierespace.qts.dpdns.org/Lumiere_Tools.bat)加快你的工作效率
+
+> 為了網路和諧與用戶保護，請勿違反相關規定，以免影響你的佈展權利，[前往服務條款](https://qimei.framer.website/policie/policie-lumiere-space)
 ---
 
 ## 使用前需要
@@ -220,6 +222,33 @@ code參數，可使用size、rotation參數，使用#作為附屬指令，!代�
   "code": "rotation=0+=1#!#delay=2500"
 }
 ```
+### 個別畫作之作品說明牌
+
+作品說明牌是放置於作品旁寫著部份資訊的牌子，資料與說明文字是獨立的，你需要額外設置
+<br>比起Q鍵的說明文字，說明牌可以增加畫廊的專業度，就像現實中的那樣
+<br>參數為ML，沒有定義則不顯示說明牌
+<br>參數值使用類HTML標記語言，但有些區別
+<br>以下是可用的標記
+```
+<h1></h1>是標題標記，字體較大，適用於標題、作者等資訊，可用H1~H3
+<p></p>是內文標記，字體較小,適合用於說明、作品資訊、媒材、尺寸等資訊
+<->是分隔線標記，產生一個分隔線
+<*>是虛狀分隔線標記，產生虛線的分隔線
+<\n>換行標記，使用則直接換行
+<color=#000000>附加下一個標記的顏色，參數使用6值Hex色碼
+```
+參數的部分由左至右，對應說明牌的上到下，每個文字標記，一組為一行，每個標記都會換行
+<br>格式如下
+
+```
+{
+  "file": "1093000067.jpg",
+  "ML": "<color=#1A4168><h1>文森·梵谷 (1853-1890)</h1><color=#1A4168><h2>向日葵</h2><h3>1888年</h3><h3>荷蘭 Netherlands</h3><-><\n><p>分類：油畫</p><p>媒料：油彩、畫布</p><p>尺寸：92.2 cm × 73 cm</p><\n><\n><\n><p>Vincent van Gogh</p><p>Twelve Sunflowers in a Vase</p><p>Dimensions: 92.2 cm × 73 cm (36.3 in × 29 in)</p><p>c. 1888</p>"
+}
+```
+<img width="700" height="513" alt="image" src="https://github.com/user-attachments/assets/ad517de4-3f30-4ca4-abf4-b02d412f131e" />
+<br>上圖為範例格式的效果，你可作為參考，此佈局為貼合現實藝術慣例與常見的說明牌設置規定
+
 ### 本地端定義檔
 你可以在本地端增加 custom.json 來做到類似manifest.json
 <br>相較於manifest.json的url，網址，在本地端使用"file"定義檔案，直接輸入檔名
@@ -295,9 +324,9 @@ code參數，可使用size、rotation參數，使用#作為附屬指令，!代�
   5. 不要附上包含上述的文字連結在檔案說明參數
 
 本工作室絕不容忍任何未成年性侵害、詐騙、暴力血腥、侵犯肖像權的影像流通於平台
-<br>如果查獲相關內容，請務必與本工作室聯絡，我們將會盡快對其處理並封鎖該連結
+<br>如果查獲相關內容，請務必與本工作室聯絡，我們將會盡快對其處理
 <br>並前往該儲存庫來源進行檢舉，Github條款明令禁止包含未成年性內容的儲存庫
-
+> 我們為了網路和諧與用戶保護，特立流光空間服務條款與相關規範，請務必詳閱並隨時注意公告變更，以免影響您的佈展權利[前往服務條款](https://qimei.framer.website/policie/policie-lumiere-space)
 ### 這邊感謝您的閱讀與理解，感謝您使用本服務
 
 ---
