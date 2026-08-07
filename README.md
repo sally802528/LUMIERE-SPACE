@@ -128,7 +128,6 @@ LUMIERE-SPACE 承諾尊重並保護您的隱私。本站所有資料上傳與處
 * Qimei Technology Studio 設計總監、維護工程師
 * DWEP Studio 網路工程師
 * 李◯蒼 測試員
-* 臺灣團隊 AI神隊友
 ---
 
 ## 🔩 相容性
