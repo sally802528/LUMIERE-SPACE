@@ -109,7 +109,7 @@ LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可�
     * 使用瀏覽器 File System Access API 進行本地文件讀取。
     * 響應式 3D 渲染，支援大部分主流瀏覽器。
     * 動態接入Github連結，完美呈現網路連通
-
+* **開發模式**：採用Vibe coding模式開發，技術與藝術的最大化
 ---
 
 ## 🛡️ 隱私聲明
@@ -123,8 +123,9 @@ LUMIERE-SPACE 承諾尊重並保護您的隱私。本站所有資料上傳與處
 --- 
 ## ©️ 開發人員
 
-* Google Gemini 首席全端工程師
-* Qimei Technology Studio 設計總監、前端維護工程師
+* Github copilot 首席前端工程師
+* Google Gemini 首席技術工程師
+* Qimei Technology Studio 設計總監、維護工程師
 * DWEP Studio 網路工程師
 * 李◯蒼 測試員
 * 臺灣團隊 AI神隊友
