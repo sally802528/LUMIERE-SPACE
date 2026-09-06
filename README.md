@@ -7,7 +7,7 @@ LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可�
 [👉 立即體驗 LUMIERE-SPACE](https://lumierespace.qts.dpdns.org/)
 >注意!我們將本專案的主服務器轉換為Cloudflare代理，此舉為了能夠擁有更快更安全的連線保護，以及未來我們將會對這個平台增加更多功能
 
->目前更新到1.14.5版本，此為公開版本，關於版本訊息請見[Releases](https://github.com/sally802528/LUMIERE-SPACE/releases)。
+>目前更新到1.15版本，此為公開版本，關於版本訊息請見[Releases](https://github.com/sally802528/LUMIERE-SPACE/releases)。
 
 >想要建立公開的線上畫廊嗎，請見[開發教學](Online.md)
 
@@ -57,7 +57,7 @@ LUMIERE-SPACE 是一個基於網頁的 3D 虛擬畫廊展示系統。用戶可�
 | :--- | :--- |
 | **W / A / S / D** | 前、左、後、右移動 |
 | **F** | 開啟 / 關閉 手電筒 |
-| **E** | 切換樓層 |
+| **E** | 切換樓層 (+Shift 切上一層)|
 | **M** | 切換歌曲 |
 | **Q** | 開啟作品說明 |
 | **Y** | 開啟 / 關閉 音樂與環境音 (不影響腳步聲) |
