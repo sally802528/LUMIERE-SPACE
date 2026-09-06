@@ -55,20 +55,24 @@
             height: 10px; 
         }
         
-        #q-prompt, #interaction-prompt {
+        #q-prompt, #interaction-prompt, #floor-prompt, #fly-up-prompt, #fly-down-prompt {
             position: absolute; left: 32px;
             display: flex; align-items: center; gap: 12px;
             color: rgba(255, 255, 255, 0.86); font-size: 12px; font-weight: 400;
             letter-spacing: 2px; z-index: 2000; pointer-events: none;
             opacity: 0; transition: opacity 0.3s ease;
         }
-        #q-prompt, #interaction-prompt { top: 32px; }
-        #interaction-prompt.stacked { top: 84px; }
+        #q-prompt, #interaction-prompt, #floor-prompt { top: 32px; }
+        #floor-prompt.active { opacity: 1; }
+        #fly-up-prompt.active, #fly-down-prompt.active { opacity: 1; }
+        #command-hint { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 12px; color: rgba(255,255,255,0.58); font-size: 10px; letter-spacing: 1px; }
+        #command-hint .prompt-key { min-width: 34px; height: 24px; padding: 0 6px; font-size: 10px; }
+        #command-hint .command-hint-text { margin-right: 8px; }
         .prompt-key {
-            min-width: 48px; height: 36px; padding: 0 11px;
+            min-width: 40px; height: 30px; padding: 0 8px;
             display: inline-flex; align-items: center; justify-content: center;
             box-sizing: border-box; color: #fff; font-family: 'Segoe UI', sans-serif;
-            font-size: 14px; font-weight: 800; letter-spacing: 0.5px;
+            font-size: 12px; font-weight: 800; letter-spacing: 0.5px;
             background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.62);
             border-radius: 4px;
         }
@@ -293,7 +297,7 @@
             .f-title { font-size: 28px; letter-spacing: 15px; }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
 </head>
 <body>
     <div id="canvas-container"></div>
@@ -314,6 +318,10 @@
             <span style="color: #00ff00; font-family: 'Courier New', monospace; font-size: 18px; margin-right: 10px;">&gt;</span>
             <input type="text" id="command-input" style="flex: 1; background: transparent; border: none; color: white; outline: none; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 1px;">
         </div>
+        <div id="command-hint">
+            <span class="prompt-key">TAB</span><span class="command-hint-text" data-lang-key="commandHintTabInput">快速輸入</span>
+            <span class="prompt-key">ENTER</span><span class="command-hint-text" data-lang-key="commandHintEnterSend">發送指令</span>
+        </div>
     </div>
 
     <div id="joystick-container"><div id="joystick-knob"></div></div>
@@ -327,6 +335,9 @@
     <div id="fps-counter">FPS: 0</div>
     <div id="q-prompt"><span class="prompt-key">Q</span><span class="prompt-label" data-lang-key="promptDetails">查看作品詳細資訊</span></div>
     <div id="interaction-prompt"><span class="prompt-key">SPACE</span><span class="prompt-label" data-lang-key="promptSit">坐下</span></div>
+    <div id="floor-prompt"><span class="prompt-key">SHIFT</span><span class="prompt-key">E</span><span class="prompt-label" data-lang-key="promptPreviousFloor">切換上一層</span></div>
+    <div id="fly-up-prompt"><span class="prompt-key">SPACE</span><span class="prompt-label" data-lang-key="promptFlyUp">攀升高度</span></div>
+    <div id="fly-down-prompt"><span class="prompt-key">SHIFT</span><span class="prompt-label" data-lang-key="promptFlyDown">下降高度</span></div>
 
     <div id="video-controls">
         <div class="ctrl-arrow arrow-left" id="btn-prev"></div>
@@ -515,6 +526,9 @@
         let videoStatusText = ""; // 用於顯示 Replayed 狀態
         let lastCameraYaw = 0, lastCameraPitch = 0, motionBlurAmount = 0;
         let floorTitleTimer = null;
+        let floorKeyPressTimer = null;
+        let isFloorKeyLongPress = false;
+        let floorKeyDirection = 1;
         let levelIndicatorTimer = null;
         let levelIndicatorFadeTimer = null;
 
@@ -634,7 +648,7 @@
                 focusScale: "Focus Scale", realtimeShadows: "Real-time Shadows", lights: "Lights", reticle: "Reticle", muteAll: "Mute Audio (Y)", fpsCounter: "FPS Counter",
                 torch: "Torch (F)", restoreDefault: "Restore Default", pause: "PAUSE", resumeSession: "Resume Session",
                 curatingArtworks: "CURATING ARTWORKS...", pressSpaceToSit: "PRESS [SPACE] TO REST",
-                pressSpaceToStand: "PRESS [SPACE] TO STAND UP", promptDetails: "VIEW ARTWORK DETAILS", promptSit: "SIT DOWN", promptStand: "STAND UP", language: "Language",
+                pressSpaceToStand: "PRESS [SPACE] TO STAND UP", promptDetails: "VIEW ARTWORK DETAILS", promptSit: "SIT DOWN", promptStand: "STAND UP", promptPreviousFloor: "PREVIOUS FLOOR", promptFlyUp: "ASCEND", promptFlyDown: "DESCEND", commandHintTabInput: "QUICK INPUT", commandHintEnterSend: "SEND COMMAND", commandHintTabSelect: "SELECT COMMAND", commandHintEnterType: "TYPE COMMAND", language: "Language",
                 videoVolume: "Video Volume", errorRetry: "Retry", errorClose: "Close",
                 help: "HELP", helpTitle: "INSTRUCTIONS", controlsTitle: "CONTROLS", tutorialTitle: "TUTORIAL", onlineTitle: "ONLINE MODE",
                 confirmEnter: "CONFIRM", notice: "Notice", noNoticesAvailable: "No notices available.",
@@ -674,7 +688,7 @@
                 focusScale: "光圈大小", realtimeShadows: "即時光影", lights: "燈光", reticle: "準星", muteAll: "靜音 (Y)", fpsCounter: "幀數顯示",
                 torch: "手電筒 (F)", restoreDefault: "恢復預設值", pause: "暫停", resumeSession: "返回",
                 curatingArtworks: "策展中...", pressSpaceToSit: "按下 [SPACE] 休息",
-                pressSpaceToStand: "按下 [SPACE] 站起", promptDetails: "查看作品詳細資訊", promptSit: "坐下", promptStand: "站起", language: "語言",
+                pressSpaceToStand: "按下 [SPACE] 站起", promptDetails: "查看作品詳細資訊", promptSit: "坐下", promptStand: "站起", promptPreviousFloor: "切換上一層", promptFlyUp: "攀升高度", promptFlyDown: "下降高度", commandHintTabInput: "快速輸入", commandHintEnterSend: "發送指令", commandHintTabSelect: "選擇指令", commandHintEnterType: "打出指令", language: "語言",
                 help: "說明", helpTitle: "使用說明", controlsTitle: "操作控制", tutorialTitle: "使用教學", onlineTitle: "線上圖庫連接", notice: "公告", noNoticesAvailable: "目前沒有公告。",
                 notices: [
                     {
@@ -797,7 +811,7 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = state.realtimeShadows;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.outputEncoding = THREE.sRGBEncoding; 
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping; 
             renderer.toneMappingExposure = 0.8;
             renderer.physicallyCorrectLights = true;
@@ -1524,7 +1538,7 @@
         function applyShadowSettings() {
             if (renderer) renderer.shadowMap.enabled = state.realtimeShadows;
             if (flashlight) flashlight.castShadow = state.realtimeShadows;
-            spotLights.forEach(light => { light.castShadow = state.realtimeShadows; });
+            spotLights.forEach(light => { light.castShadow = state.realtimeShadows && light.userData.castsShadow !== false; });
         }
 
         function getArtworkSizeMultiplier(item) {
@@ -1812,7 +1826,6 @@
 
             const texture = new THREE.CanvasTexture(canvas);
             texture.colorSpace = THREE.SRGBColorSpace;
-            texture.encoding = THREE.sRGBEncoding;
             texture.minFilter = THREE.LinearFilter;
             texture.magFilter = THREE.LinearFilter;
             texture.wrapS = THREE.ClampToEdgeWrapping;
@@ -2060,9 +2073,7 @@
 
             isLoading = true;
             updateLoadingProgress(0);
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'flex';
-            requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+            showLoadingOverlay();
 
             await galleryMaterialsReady;
             floors = await curateFloors(items);
@@ -2249,9 +2260,7 @@
                     try {
                         isLoading = true;
                         updateLoadingProgress(0);
-                        const overlay = document.getElementById('loading-overlay');
-                        overlay.style.display = 'flex';
-                        requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+                        showLoadingOverlay();
 
                         let resp = await fetch(loadUrl);
 
@@ -2576,6 +2585,7 @@
             document.querySelectorAll('#lang-switcher .lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.lang === lang);
             });
+            updateCommandHint();
             updateNowPlayingText();
 
             // 如果公告面板開啟，即時更新公告
@@ -2684,6 +2694,25 @@
             }, 350);
         }
 
+        function updatePromptStack() {
+            const prompts = [
+                document.getElementById('q-prompt'),
+                document.getElementById('interaction-prompt'),
+                document.getElementById('floor-prompt'),
+                document.getElementById('fly-up-prompt'),
+                document.getElementById('fly-down-prompt')
+            ];
+            let visibleIndex = 0;
+
+            prompts.forEach(promptElement => {
+                const isVisible = ['q-prompt', 'floor-prompt', 'fly-up-prompt', 'fly-down-prompt'].includes(promptElement.id)
+                    ? promptElement.classList.contains('active')
+                    : parseFloat(promptElement.style.opacity || '0') > 0;
+                promptElement.style.top = `${32 + visibleIndex * 52}px`;
+                if (isVisible) visibleIndex += 1;
+            });
+        }
+
         function showFloorTitle(idx) {
             if (isMobile) hideTouchCursor();
             if (isDetailOpen) closeDetail();
@@ -2745,6 +2774,17 @@
 
         const commandSuggestions = ['/help', '/renew', '/reload', '/fly', '/nightsky', '/nightsky_a', '/hello', '/version', '/clear', '/test_title', '/test_wb', '/test_gpu'];
 
+        function updateCommandHint() {
+            const hint = document.getElementById('command-hint');
+            if (!hint) return;
+
+            const language = translations[currentLang] || translations.zh;
+            const hintLabels = hint.querySelectorAll('.command-hint-text');
+            const isSelectingCommand = commandSuggestionCandidates.length > 0;
+            hintLabels[0].textContent = language[isSelectingCommand ? 'commandHintTabSelect' : 'commandHintTabInput'];
+            hintLabels[1].textContent = language[isSelectingCommand ? 'commandHintEnterType' : 'commandHintEnterSend'];
+        }
+
         function hideCommandSuggestions() {
             commandSuggestionCandidates = [];
             commandSuggestionIndex = -1;
@@ -2755,6 +2795,7 @@
                 suggestions.replaceChildren();
                 suggestions.style.display = 'none';
             }
+            updateCommandHint();
         }
 
         function navigateCommandHistory(direction) {
@@ -2830,6 +2871,7 @@
             commandSuggestionIndex = (commandSuggestionIndex + 1) % candidates.length;
             input.value = candidates[commandSuggestionIndex];
             renderCommandSuggestions();
+            updateCommandHint();
             input.focus();
             return true;
         }
@@ -3054,9 +3096,7 @@
             isLoading = true;
             updateLoadingProgress(0);
             stopMovement();
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'flex';
-            requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+            showLoadingOverlay();
             if (isDetailOpen) closeDetail();
 
             // 只有場景材質與當前樓層畫作都完成後，才允許顯示展場
@@ -3163,7 +3203,7 @@
                     }
                     loadedCount++;
                     updateLoadingProgress((loadedCount / totalItems) * 100);
-                    if (texture) texture.encoding = THREE.sRGBEncoding;
+                    if (texture) texture.colorSpace = THREE.SRGBColorSpace;
                     if (texture && item.aspectRatio) {
                         const mediaAspect = item.mediaAspect || item.displayAspect;
                         let repeatX = 1;
@@ -3227,10 +3267,7 @@
             if(resetPos) player.position.set(0, 5.5, 50);
             applySpotSettings();
             
-            document.getElementById('loading-overlay').style.opacity = '0'; 
-            await new Promise(r => setTimeout(r, 350)); // 等待短淡出動畫結束
-            
-            document.getElementById('loading-overlay').style.display = 'none'; 
+            await hideLoadingOverlay();
             isLoading = false; 
             if (isMobile) isPaused = false;
             else if (document.getElementById('ui-layer').style.display === 'none') document.body.requestPointerLock();
@@ -3242,6 +3279,7 @@
         function addSpotlight(targetGroup, w, h, rotation) {
             const light = new THREE.SpotLight(0xffffff, state.spotIntensity, 45, state.spotAngle, 0.8, 1.2);
             configureShadowLight(light);
+            light.userData.castsShadow = false;
             light.position.set(targetGroup.position.x + Math.sin(rotation)*7, targetGroup.position.y + 8, targetGroup.position.z + Math.cos(rotation)*7);
             const target = new THREE.Object3D(); target.position.copy(targetGroup.position);
             scene.add(target); light.target = target; scene.add(light); spotLights.push(light);
@@ -3253,6 +3291,27 @@
         function updateLoadingProgress(pct) {
             const bar = document.getElementById('loading-progress');
             if (bar) bar.style.width = `${pct}%`;
+        }
+
+        function showLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '0';
+            void overlay.offsetWidth;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+            }));
+        }
+
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.opacity = '0';
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    resolve();
+                }, 400);
+            });
         }
 
         function showTimerUI() {
@@ -3762,6 +3821,11 @@
                     return;
                 }
 
+                if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && floors.length > 1 && !isLoading && !isPaused && !isSettingsOpen && !isHelpOpen && !isDetailOpen) {
+                    document.getElementById('floor-prompt').classList.add('active');
+                    updatePromptStack();
+                }
+
                 hideFloorTitle();
                 if(e.code === 'KeyU' && !e.ctrlKey && !e.altKey && !e.metaKey && !isHelpOpen && !isDetailOpen) { 
                     e.preventDefault(); 
@@ -3779,7 +3843,15 @@
                     playMusicTrack((currentMusicIndex + 1) % musicPlaylist.length, !isPaused);
                 }
                 if(e.code === 'KeyF') { state.flashlightOn = !state.flashlightOn; flashlight.visible = state.flashlightOn; document.getElementById('flashlight-toggle').checked = state.flashlightOn; }
-                if(e.code === 'KeyE' && !isLoading) { currentFloorIdx = (currentFloorIdx + 1) % floors.length; loadFloor(currentFloorIdx, false); }
+                if (e.code === 'KeyE' && !isLoading && floors.length > 1 && !isFloorKeyLongPress && !floorKeyPressTimer) {
+                    e.preventDefault();
+                    floorKeyDirection = e.shiftKey ? -1 : 1;
+                    floorKeyPressTimer = setTimeout(() => {
+                        floorKeyPressTimer = null;
+                        isFloorKeyLongPress = true;
+                        showLevelIndicator();
+                    }, 500);
+                }
                 
                 // 如果詳細資訊面板開啟，任何按鍵都會關閉它
                 if (isDetailOpen) {
@@ -3857,6 +3929,21 @@
             });
 
             window.addEventListener('keyup', e => {
+                if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+                    document.getElementById('floor-prompt').classList.remove('active');
+                    updatePromptStack();
+                }
+                if (e.code === 'KeyE') {
+                    if (floorKeyPressTimer) {
+                        clearTimeout(floorKeyPressTimer);
+                        floorKeyPressTimer = null;
+                        if (!isLoading && floors.length > 1) {
+                            currentFloorIdx = (currentFloorIdx + floorKeyDirection + floors.length) % floors.length;
+                            loadFloor(currentFloorIdx, false);
+                        }
+                    }
+                    isFloorKeyLongPress = false;
+                }
                 if(e.code === 'Space') moveUp = false;
                 if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') moveDown = false;
                 if(e.code === 'KeyC') { isZooming = false; }
@@ -3878,7 +3965,14 @@
                 if(e.code==='KeyA') moveLeft=false; if(e.code==='KeyD') moveRight=false;
             });
             
-            window.addEventListener('blur', stopMovement);
+            window.addEventListener('blur', () => {
+                stopMovement();
+                if (floorKeyPressTimer) clearTimeout(floorKeyPressTimer);
+                floorKeyPressTimer = null;
+                isFloorKeyLongPress = false;
+                document.getElementById('floor-prompt').classList.remove('active');
+                updatePromptStack();
+            });
 
             document.addEventListener('mousemove', e => {
                 if (document.pointerLockElement === document.body) {
@@ -3957,6 +4051,12 @@
             updateMeteorShowers(meteorDelta);
             const prompt = document.getElementById('interaction-prompt');
             const reticle = document.getElementById('reticle');
+            const flyUpPrompt = document.getElementById('fly-up-prompt');
+            const flyDownPrompt = document.getElementById('fly-down-prompt');
+            const showFlyPrompts = isFlying && !isPaused && !isSettingsOpen && !isHelpOpen && !isDetailOpen;
+            flyUpPrompt.classList.toggle('active', showFlyPrompts);
+            flyDownPrompt.classList.toggle('active', showFlyPrompts);
+            updatePromptStack();
             if (isPaused || isSettingsOpen || isHelpOpen) isZooming = false;
             const targetFov = isZooming ? targetZoomFov : state.fov;
 
@@ -4056,7 +4156,6 @@
                 const showQPrompt = canInteractWithArt && !isDetailOpen && !isInteractionBlocked;
                 qPrompt.style.opacity = showQPrompt ? '1' : '0';
                 qPrompt.classList.toggle('active', showQPrompt);
-                prompt.classList.toggle('stacked', showQPrompt);
 
                 if (isFlying) {
                     prompt.style.opacity = '0';
@@ -4161,6 +4260,8 @@
                         player.position.y = groundY; velocityY = 0; canJump = true; 
                     }
                 }
+
+                updatePromptStack();
 
                 // --- 影片播放管理優化 ---
                 let foundObj = null; 
