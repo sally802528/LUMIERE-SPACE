@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Lumière Space v1.14.5</title>
+    <title>Lumière Space v1.15</title>
     <link rel="icon" href="https://lumierespace.qts.dpdns.org/Texture/favicon.ico" type="image/x-icon">
     <style>
         :root {
@@ -55,15 +55,24 @@
             height: 10px; 
         }
         
-        #q-prompt {
-            position: absolute; top: 40px; left: 40px;
-            width: 40px; height: 40px;
-            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: rgba(255, 255, 255, 0.7); font-size: 20px; font-weight: bold; z-index: 2000;
-            pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
+        #q-prompt, #interaction-prompt {
+            position: absolute; left: 32px;
+            display: flex; align-items: center; gap: 12px;
+            color: rgba(255, 255, 255, 0.86); font-size: 12px; font-weight: 400;
+            letter-spacing: 2px; z-index: 2000; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s ease;
         }
+        #q-prompt, #interaction-prompt { top: 32px; }
+        #interaction-prompt.stacked { top: 84px; }
+        .prompt-key {
+            min-width: 48px; height: 36px; padding: 0 11px;
+            display: inline-flex; align-items: center; justify-content: center;
+            box-sizing: border-box; color: #fff; font-family: 'Segoe UI', sans-serif;
+            font-size: 14px; font-weight: 800; letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.62);
+            border-radius: 4px;
+        }
+        .prompt-label { white-space: nowrap; text-shadow: 0 1px 8px rgba(0,0,0,0.8); }
         @keyframes q-flash {
             0%, 100% { opacity: 0.8; }
             50% { opacity: 0.3; }
@@ -83,8 +92,9 @@
 
         #music-now-playing {
             position: absolute;
-            left: 20px;
-            bottom: 20px;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 4100;
             pointer-events: none;
             display: none;
@@ -98,17 +108,19 @@
             font-size: 12px;
             letter-spacing: 4px;
             text-transform: uppercase;
+            white-space: nowrap;
+            text-align: center;
             transition: opacity 0.35s ease, transform 0.35s ease;
         }
         #music-now-playing.active {
             display: flex;
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
 
-        #interaction-prompt { position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); color: white; font-size: 11px; letter-spacing: 4px; background: rgba(0,0,0,0.8); padding: 12px 25px; display: none; z-index: 1000; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); text-transform: uppercase; }
-
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 2000; color: white; transition: opacity 0.8s ease; }
+        #file-input-label { transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+        #file-input-label.folder-drop-target { transform: scale(1.18) !important; background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.75); box-shadow: 0 0 35px rgba(255, 255, 255, 0.28); }
         .glass-btn { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid var(--border-glass); color: var(--accent-color); padding: 12px 35px; cursor: pointer; letter-spacing: 5px; font-size: 11px; text-transform: uppercase; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: flex; align-items: center; justify-content: center; outline: none; pointer-events: auto; min-width: 120px; z-index: 3100; }
         .glass-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.6); box-shadow: 0 0 25px rgba(255, 255, 255, 0.2); transform: translateY(-2px) scale(1.02); text-shadow: 0 0 8px rgba(255,255,255,0.6); }
         .glass-btn.no-hover:hover { background: rgba(255, 255, 255, 0.04) !important; border-color: rgba(255,255,255,0.14) !important; box-shadow: none !important; transform: none !important; text-shadow: none !important; }
@@ -124,7 +136,7 @@
         .control-group { margin-bottom: 20px; }
         .control-group label { display: block; font-size: 9px; margin-bottom: 8px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; }
         .control-group input[type="range"] { width: 100%; cursor: pointer; }
-        #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: #000; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; z-index: 3000; opacity: 0; transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1); color: white; letter-spacing: 15px; font-weight: 100; }
+        #loading-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: #000; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); display: none; align-items: center; justify-content: center; z-index: 3000; opacity: 0; transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1); color: white; letter-spacing: 15px; font-weight: 100; }
 
         /* 錯誤彈窗樣式 */
         #error-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(20,0,0,0.6); backdrop-filter: blur(30px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 6000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.4s ease-out; }
@@ -133,6 +145,10 @@
         /* 免責聲明彈窗樣式 */
         #disclaimer-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(40px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 7000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.6s ease-out; }
         .disclaimer-container { max-width: 600px; background: var(--bg-glass); border: 1px solid var(--border-glass); padding: 50px; text-align: center; backdrop-filter: blur(20px); }
+
+        /* 即時光影確認彈窗樣式 */
+        #realtime-shadows-confirm-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(40px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 8000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.4s ease-out; }
+        .realtime-shadows-confirm-container { max-width: 560px; background: var(--bg-glass); border: 1px solid var(--border-glass); padding: 50px; text-align: center; backdrop-filter: blur(20px); }
 
         /* 說明介面樣式 */
         #help-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(40px); color: white; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; padding: 40px; box-sizing: border-box; animation: overlay-fade-in 0.6s ease-out; }
@@ -249,6 +265,26 @@
         }
         .command-log-entry.error { color: #ff5555; }
         .command-log-entry.success { color: #ffffff; }
+        #command-suggestions {
+            width: 100%;
+            margin-bottom: 8px;
+            display: none;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 2px;
+            color: rgba(255,255,255,0.78);
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .command-suggestion {
+            padding: 5px 8px;
+            border-radius: 3px;
+            white-space: pre;
+        }
+        .command-suggestion.active {
+            color: #fff;
+            background: rgba(255,255,255,0.16);
+        }
 
         @media (max-width: 850px) {
             #video-controls { bottom: 200px; left: 30px; }
@@ -273,6 +309,7 @@
         <div id="command-log-container" style="width: 100%; margin-bottom: 10px; display: flex; flex-direction: column; align-items: flex-start; max-height: 200px; overflow-y: auto; scrollbar-width: none;">
             <!-- 錯誤訊息將會堆疊在此 -->
         </div>
+        <div id="command-suggestions" aria-live="polite"></div>
         <div id="command-input-group" style="display: flex; align-items: center; width: 100%;">
             <span style="color: #00ff00; font-family: 'Courier New', monospace; font-size: 18px; margin-right: 10px;">&gt;</span>
             <input type="text" id="command-input" style="flex: 1; background: transparent; border: none; color: white; outline: none; font-family: 'Courier New', monospace; font-size: 16px; letter-spacing: 1px;">
@@ -288,8 +325,8 @@
     </div>
 
     <div id="fps-counter">FPS: 0</div>
-    <div id="q-prompt">Q</div>
-    <div id="interaction-prompt">PRESS [SPACE] TO SIT</div>
+    <div id="q-prompt"><span class="prompt-key">Q</span><span class="prompt-label" data-lang-key="promptDetails">查看作品詳細資訊</span></div>
+    <div id="interaction-prompt"><span class="prompt-key">SPACE</span><span class="prompt-label" data-lang-key="promptSit">坐下</span></div>
 
     <div id="video-controls">
         <div class="ctrl-arrow arrow-left" id="btn-prev"></div>
@@ -302,7 +339,7 @@
         <div style="text-align: center; pointer-events: none;">
             <h1 style="font-weight: 100; margin-bottom: 60px; color: rgba(255,255,255,0.9);">LUMIÈRE SPACE</h1>
             <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; pointer-events: auto;">
-                <label for="file-input" class="glass-btn" data-lang-key="enterGallery">進入展覽</label>
+                <label id="file-input-label" for="file-input" class="glass-btn" data-lang-key="enterGallery">進入展覽</label>
                 <input type="file" id="file-input" webkitdirectory directory multiple style="display:none;">
             </div>
         </div>
@@ -331,6 +368,7 @@
         <div class="control-group"><label data-lang-key="musicVolume">音樂音量</label><input type="range" id="music-slider" min="0" max="1" step="0.1" value="0.3"></div>
         <div class="control-group"><label data-lang-key="videoVolume">影片音量</label><input type="range" id="video-slider" min="0" max="1" step="0.1" value="0.8"></div>
         <div class="control-group"><label data-lang-key="viewPerspective">視角廣度 (FOV)</label><input type="range" id="fov-slider" min="40" max="120" step="1" value="60"></div>
+        <div class="control-group"><label data-lang-key="viewHeight">視角高度</label><input type="range" id="view-height-slider" min="3.5" max="8.0" step="0.1" value="5.5"></div>
         <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
         <div class="control-group"><label data-lang-key="ambientLight">環境光</label><input type="range" id="ambient-slider" min="0" max="2" step="0.1" value="0.4"></div>
         <div class="control-group"><label data-lang-key="spotlightPower">射燈強度</label><input type="range" id="spot-slider" min="0" max="100" step="5" value="35"></div>
@@ -338,7 +376,9 @@
         <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
         <div class="control-group" style="display:flex; flex-wrap: wrap; gap: 15px;">
             <label data-lang-key="lights" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="spot-toggle" checked> 燈光</label>
+            <label data-lang-key="realtimeShadows" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="realtime-shadows-toggle"> 即時光影</label>
             <label data-lang-key="reticle" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="reticle-toggle" checked> 準星</label>
+            <label data-lang-key="motionBlur" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="motionblur-toggle"> 動態模糊</label>
             <label data-lang-key="muteAll" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="mute-toggle"> 靜音 (Y)</label>
             <label data-lang-key="fpsCounter" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="fps-toggle"> 幀數顯示</label>
             <label data-lang-key="torch" style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="flashlight-toggle"> 手電筒 (F)</label>
@@ -383,7 +423,7 @@
             <div class="help-section">
                 <div class="help-title" data-lang-key="tutorialTitle">使用教學</div>
                 <div style="font-size: 11px; line-height: 1.8; color: rgba(255,255,255,0.7); letter-spacing: 1px;" data-lang-key="tutorialDesc">
-                    進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。
+                    進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下 Space 鍵可以坐下休息。
                 </div>
             </div>
         </div>
@@ -411,6 +451,17 @@
         </div>
     </div>
 
+    <div id="realtime-shadows-confirm-overlay">
+        <div class="realtime-shadows-confirm-container">
+            <div id="realtime-shadows-confirm-title" data-lang-key="realtimeShadowsConfirmTitle" style="font-size: 18px; line-height: 1.8; margin-bottom: 20px; letter-spacing: 2px;">你確定要開啟即時光影嗎？</div>
+            <div id="realtime-shadows-confirm-message" data-lang-key="realtimeShadowsConfirmMessage" style="font-size: 13px; line-height: 2; margin-bottom: 40px; letter-spacing: 1px; opacity: 0.9;">如果您的設備渲染能力不足可能導致卡頓或渲染錯誤，你確定要開啟嗎？</div>
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <button class="glass-btn" id="realtime-shadows-confirm-btn" data-lang-key="realtimeShadowsConfirm">我相信我的電腦做得到</button>
+                <button class="glass-btn" id="realtime-shadows-cancel-btn" data-lang-key="realtimeShadowsCancel">我放棄</button>
+            </div>
+        </div>
+    </div>
+
     <div id="detail-overlay">
         <div class="detail-right">
             <div class="detail-title" id="detail-title">作品標題</div>
@@ -423,7 +474,7 @@
         <div style="display: flex; flex-direction: column; align-items: center; gap: 30px;">
             <div data-lang-key="curatingArtworks">策展中...</div>
             <div style="width: 200px; height: 1px; background: rgba(255,255,255,0.1); position: relative; overflow: hidden;">
-                <div id="loading-progress" style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #fff; transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);"></div>
+                <div id="loading-progress" style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: #fff; transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);"></div>
             </div>
         </div>
     </div>
@@ -449,9 +500,12 @@
 
     <script>
         let scene, camera, renderer, player, pitch, raycaster = new THREE.Raycaster();
-        let ambientLight, flashlight, spotLights = [], selectableArt = [];
+        let galleryMaterialsReady = Promise.resolve();
+        let ambientLight, hemisphereLight, flashlight, spotLights = [], selectableArt = [];
         let floors = [], currentFloorIdx = 0;
-        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isDetailOpen = false, isCommandLineOpen = false;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, moveUp = false, moveDown = false, isFlying = false, isDetailOpen = false, isCommandLineOpen = false;
+        let commandSuggestionCandidates = [], commandSuggestionIndex = -1, commandSuggestionInput = '', commandSuggestionPrefix = '';
+        let commandHistory = [], commandHistoryIndex = -1;
         let canJump = true, velocityY = 0, moveVelocity = new THREE.Vector2(0, 0), isLoading = false, isPaused = true, isSettingsOpen = false, isHelpOpen = false, floorTitleRequested = false, isClosingCommandLine = false;
         let lastTime = performance.now(), frameCount = 0;
 
@@ -459,6 +513,7 @@
         let activeVideo = null, longPressTimer = null, isLongPressActive = false, timerHideTimeout = null;
         let rewindInterval = null; 
         let videoStatusText = ""; // 用於顯示 Replayed 狀態
+        let lastCameraYaw = 0, lastCameraPitch = 0, motionBlurAmount = 0;
         let floorTitleTimer = null;
         let levelIndicatorTimer = null;
         let levelIndicatorFadeTimer = null;
@@ -466,6 +521,7 @@
         let bench, isSitting = false, isStandingUp = false, canBenchInteract = false;
         const benchPos = new THREE.Vector3(0, 0, 0);
         const benchBox = { w: 12.5, d: 5.5 }; 
+        const BENCH_LEVEL_Y = 8.5;
         let audioCtx, footstepBuffer, ambienceGain, musicGain, distanceAccumulator = 0;
         let musicPlaylist = [];
         let currentMusicIndex = 0;
@@ -479,6 +535,9 @@
         let nightSkyGroup = null;
         let nightSkyForced = false, nightSkyEnabled = false;
         let starTwinkleData = [];
+        let meteorData = [];
+        let meteorNextSpawnAt = 0;
+        let lastMeteorUpdateTime = performance.now();
         let preSittingPos = new THREE.Vector3(), preSittingRotY = 0, targetSittingRotY = 0;
         let currentLang = 'en'; // Default to English
         let focusHideTimer = null, lastPointedCanvas = null, isReticleFocusHidden = false;
@@ -486,12 +545,13 @@
 
         const updateNowPlayingText = () => {
             if (!musicNowPlayingEl) return;
+            const nowPlayingLabel = currentLang === 'zh' ? '正在播放：' : 'Now Playing:';
             if (floorMusicUrl) {
-                musicNowPlayingEl.textContent = 'Now Playing: Floor Music';
+                musicNowPlayingEl.textContent = `${nowPlayingLabel} Floor Music`;
                 return;
             }
             const item = musicPlaylist[currentMusicIndex];
-            musicNowPlayingEl.textContent = item ? `Now Playing: ${item.title}` : 'Now Playing: ---';
+            musicNowPlayingEl.textContent = item ? `${nowPlayingLabel} ${item.title}` : `${nowPlayingLabel} ---`;
         };
 
         const showMusicNowPlaying = () => {
@@ -567,14 +627,14 @@
 
         const translations = {
             en: {
-                enterGallery: "Enter Gallery", floors: "Floors (E)", engine: "Engine (U)",
+                enterGallery: "Enter Gallery", dropFolder: "DROP FOLDER HERE", floors: "Floors (E)", engine: "Engine (U)",
                 systemOptics: "SYSTEM OPTICS", movementSpeed: "Movement Speed", jumpImpulse: "Jump Impulse",
                 footstepVolume: "Footstep Volume", ambienceVolume: "Ambience Volume", musicVolume: "Music Volume",
-                viewPerspective: "View Perspective (FOV)", ambientLight: "Ambient Light", spotlightPower: "Spotlight Power",
-                focusScale: "Focus Scale", lights: "Lights", reticle: "Reticle", muteAll: "Mute Audio (Y)", fpsCounter: "FPS Counter",
+                viewPerspective: "View Perspective (FOV)", viewHeight: "View Height", ambientLight: "Ambient Light", spotlightPower: "Spotlight Power",
+                focusScale: "Focus Scale", realtimeShadows: "Real-time Shadows", lights: "Lights", reticle: "Reticle", muteAll: "Mute Audio (Y)", fpsCounter: "FPS Counter",
                 torch: "Torch (F)", restoreDefault: "Restore Default", pause: "PAUSE", resumeSession: "Resume Session",
                 curatingArtworks: "CURATING ARTWORKS...", pressSpaceToSit: "PRESS [SPACE] TO REST",
-                pressSpaceToStand: "PRESS [SPACE] TO STAND UP", language: "Language",
+                pressSpaceToStand: "PRESS [SPACE] TO STAND UP", promptDetails: "VIEW ARTWORK DETAILS", promptSit: "SIT DOWN", promptStand: "STAND UP", language: "Language",
                 videoVolume: "Video Volume", errorRetry: "Retry", errorClose: "Close",
                 help: "HELP", helpTitle: "INSTRUCTIONS", controlsTitle: "CONTROLS", tutorialTitle: "TUTORIAL", onlineTitle: "ONLINE MODE",
                 confirmEnter: "CONFIRM", notice: "Notice", noNoticesAvailable: "No notices available.",
@@ -587,7 +647,7 @@
                     {
                         title: "New Features Update",
                         date: "2023-10-20",
-                        content: "Version 1.14.5 brings improved performance, better mobile controls, and enhanced visual effects. We hope you enjoy the updates!"
+                        content: "Version 1.15 brings improved performance, better mobile controls, and enhanced visual effects. We hope you enjoy the updates!"
                     },
                     { title: "CORS Issue Resolved", date: "2023-10-15", content: "We have addressed the cross-origin resource sharing (CORS) issues for external textures. Please ensure your server is correctly configured for optimal experience." }
                 ],
@@ -600,17 +660,21 @@
                 helpY: "Audio Toggle", helpF: "Flashlight", helpM: "Change music track", helpC: "Zoom View",helpCS: "Adjust focus", helpArrows: "Video Seek / Playback",
                 helpQ: "View Artwork Details",
                 moveClose: "Move to close title", tutorialDesc: "Navigate freely in the gallery. Point at artworks to auto-play videos with audio. Hold arrows to fast-forward or rewind. Press Space near the bench to rest.",
-                levelIndicator: "LEVEL {current} / {total}", credits: "Produced by Qimei Technology Studio | CC BY-NC-SA 4.0 Licensed"
+                levelIndicator: "LEVEL {current} / {total}", credits: "Produced by Qimei Technology Studio | CC BY-NC-SA 4.0 Licensed",
+                realtimeShadowsConfirmTitle: "Are you sure you want to enable real-time shadows?",
+                realtimeShadowsConfirmMessage: "If your device does not have enough rendering power, it may cause stuttering or rendering errors. Are you sure you want to enable it?",
+                realtimeShadowsConfirm: "I trust my computer can handle it",
+                realtimeShadowsCancel: "I give up"
             },
             zh: {
-                enterGallery: "進入展覽", floors: "樓層 (E)", engine: "設定 (U)",
+                enterGallery: "進入展覽", dropFolder: "將資料夾拖到這裡", floors: "樓層 (E)", engine: "設定 (U)",
                 systemOptics: "系統選項", movementSpeed: "移動速度", jumpImpulse: "跳躍力道", 
                 footstepVolume: "腳步音量", ambienceVolume: "環境音量", musicVolume: "音樂音量", videoVolume: "影片音量",
-                viewPerspective: "視角廣度 (FOV)", ambientLight: "環境光", spotlightPower: "聚光燈強度",
-                focusScale: "光圈大小", lights: "燈光", reticle: "準星", muteAll: "靜音 (Y)", fpsCounter: "幀數顯示",
+                viewPerspective: "視角廣度 (FOV)", viewHeight: "視角高度", ambientLight: "環境光", spotlightPower: "聚光燈強度",
+                focusScale: "光圈大小", realtimeShadows: "即時光影", lights: "燈光", reticle: "準星", muteAll: "靜音 (Y)", fpsCounter: "幀數顯示",
                 torch: "手電筒 (F)", restoreDefault: "恢復預設值", pause: "暫停", resumeSession: "返回",
                 curatingArtworks: "策展中...", pressSpaceToSit: "按下 [SPACE] 休息",
-                pressSpaceToStand: "按下 [SPACE] 站起", language: "語言",
+                pressSpaceToStand: "按下 [SPACE] 站起", promptDetails: "查看作品詳細資訊", promptSit: "坐下", promptStand: "站起", language: "語言",
                 help: "說明", helpTitle: "使用說明", controlsTitle: "操作控制", tutorialTitle: "使用教學", onlineTitle: "線上圖庫連接", notice: "公告", noNoticesAvailable: "目前沒有公告。",
                 notices: [
                     {
@@ -621,7 +685,7 @@
                     {
                         title: "新功能更新",
                         date: "2023-10-20",
-                        content: "版本 1.14.5 帶來了性能提升、更好的行動裝置控制和增強的視覺效果。希望您喜歡這些更新！"
+                        content: "版本 1.15 帶來了性能提升、更好的行動裝置控制和增強的視覺效果。希望您喜歡這些更新！"
                     },
                     { title: "CORS 問題已解決", date: "2023-10-15", content: "我們已解決外部材質的跨來源資源共享 (CORS) 問題。請確保您的伺服器已正確配置以獲得最佳體驗。" }
                 ],
@@ -634,12 +698,16 @@
                 helpWASD: "移動角色", helpSpace: "跳躍 / 坐下 / 站起", helpMouse: "環視四周", helpU: "開啟設定選單", helpE: "切換樓層", 
                 helpY: "靜音開關", helpF: "手電筒開關", helpM: "切換音樂曲目", helpC: "縮放視角 (望遠鏡)", helpArrows: "影片倒帶 / 快進",
                 helpQ: "查看作品詳細資訊",
-                moveClose: "移動以關閉標題", tutorialDesc: "進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下空白鍵可以坐下休息。",
-                levelIndicator: "層級 {current} / {total}", credits: "Qimei Technology Studio 製作 創用CC BY-NC-SA 4.0授權"
+                moveClose: "移動以關閉標題", tutorialDesc: "進入展覽後，您可以自由行走。對準畫作時，如果是影片將會自動播放並開啟聲音。長按方向鍵可以對影片進行快進或快退。走到中央長椅處按下 Space 鍵可以坐下休息。",
+                levelIndicator: "層級 {current} / {total}", credits: "Qimei Technology Studio 製作 創用CC BY-NC-SA 4.0授權",
+                realtimeShadowsConfirmTitle: "你確定要開啟即時光影嗎？",
+                realtimeShadowsConfirmMessage: "如果您的設備渲染能力不足可能導致卡頓或渲染錯誤，你確定要開啟嗎？",
+                realtimeShadowsConfirm: "我相信我的電腦做得到",
+                realtimeShadowsCancel: "我放棄"
             }
         };
 
-        const state = { speed: 0.38, jumpForce: 0.2, footstepVolume: 1.0, ambienceVolume: 0.5, musicVolume: 0.3, videoVolume: 0.8, fov: 60, ambientIntensity: 0.4, spotIntensity: 35, spotAngle: 0.7, spotVisible: true, reticleVisible: true, flashlightOn: false, fpsVisible: false, audioMuted: false };
+        const state = { speed: 0.38, jumpForce: 0.2, footstepVolume: 1.0, ambienceVolume: 0.5, musicVolume: 0.3, videoVolume: 0.8, fov: 60, viewHeight: 5.5, ambientIntensity: 0.4, spotIntensity: 35, spotAngle: 0.7, spotVisible: true, realtimeShadows: false, reticleVisible: true, flashlightOn: false, fpsVisible: false, audioMuted: false, motionBlurEnabled: false };
         const DEFAULT_LOAD_URL = ''; 
         const defaultState = { ...state };
         const ROOM = { w: 100, d: 120, h: 22 }; 
@@ -707,22 +775,31 @@
             camera = new THREE.PerspectiveCamera(state.fov, window.innerWidth / window.innerHeight, 0.1, 2000);
             pitch.add(camera);
             currentVisualFov = state.fov;
+            lastCameraYaw = player.rotation.y;
+            lastCameraPitch = pitch.rotation.x;
 
             flashlight = new THREE.SpotLight(0xffffff, 40, 45, Math.PI / 6, 0.4, 1.2);
+            configureShadowLight(flashlight, 1024);
             flashlight.visible = state.flashlightOn;
             camera.add(flashlight);
             flashlight.target.position.set(0, 0, -5);
             camera.add(flashlight.target);
 
-            buildGallery();
+            galleryMaterialsReady = Promise.all([buildGallery(), addCustomMarbleBench()]).catch(err => {
+                console.error('Gallery material load failed:', err);
+                showError(`${translations[currentLang].errorFetchFailed}\n→ ${err.message}`);
+                throw err;
+            });
             initAudio();
-            addCustomMarbleBench();
 
             renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = state.realtimeShadows;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             renderer.outputEncoding = THREE.sRGBEncoding; 
             renderer.toneMapping = THREE.ACESFilmicToneMapping; 
+            renderer.toneMappingExposure = 0.8;
             renderer.physicallyCorrectLights = true;
             renderer.sortObjects = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
@@ -758,6 +835,207 @@
             return texture;
         }
 
+        function spawnMeteor() {
+            if (!nightSkyEnabled || !nightSkyGroup || meteorData.length >= 2) return;
+
+            const cameraPosition = new THREE.Vector3();
+            const forward = new THREE.Vector3();
+            const cameraRight = new THREE.Vector3();
+            const cameraUp = new THREE.Vector3();
+            camera.getWorldPosition(cameraPosition);
+            camera.getWorldDirection(forward);
+            cameraRight.setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+            cameraUp.setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+            const distance = 540;
+            const spawnFov = Math.min(camera.fov, targetZoomFov);
+            const halfFov = THREE.MathUtils.degToRad(spawnFov / 2);
+            const halfHeight = Math.tan(halfFov) * distance * 0.62;
+            const halfWidth = halfHeight * camera.aspect;
+            const travel = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.7,
+                -(0.35 + Math.random() * 0.45),
+                -(0.25 + Math.random() * 0.35)
+            ).normalize();
+            const start = cameraPosition.clone()
+                .addScaledVector(forward, distance)
+                .addScaledVector(cameraRight, (Math.random() - 0.5) * halfWidth)
+                .addScaledVector(cameraUp, (Math.random() - 0.5) * halfHeight);
+            const trailSegments = [];
+            const trailSegmentCount = 128;
+            for (let segmentIndex = 0; segmentIndex < trailSegmentCount; segmentIndex++) {
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3));
+                const material = new THREE.PointsMaterial({
+                    color: 0xffc47a,
+                    transparent: true,
+                    opacity: 0,
+                    size: 5,
+                    sizeAttenuation: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    fog: false,
+                    map: createStarTexture()
+                });
+                const segment = new THREE.Points(geometry, material);
+                segment.renderOrder = 1001;
+                segment.frustumCulled = false;
+                nightSkyGroup.add(segment);
+                trailSegments.push(segment);
+            }
+
+            const headGeometry = new THREE.BufferGeometry();
+            headGeometry.setAttribute('position', new THREE.Float32BufferAttribute(start.toArray(), 3));
+            const headMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 4,
+                sizeAttenuation: true,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                fog: false,
+                map: createStarTexture()
+            });
+            const head = new THREE.Points(headGeometry, headMaterial);
+            head.renderOrder = 1002;
+            head.frustumCulled = false;
+            nightSkyGroup.add(head);
+
+            const haloGeometry = new THREE.BufferGeometry();
+            haloGeometry.setAttribute('position', new THREE.Float32BufferAttribute(start.toArray(), 3));
+            const haloMaterial = new THREE.PointsMaterial({
+                color: 0xff9a58,
+                size: 9,
+                sizeAttenuation: true,
+                transparent: true,
+                opacity: 0,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                fog: false,
+                map: createStarTexture()
+            });
+            const halo = new THREE.Points(haloGeometry, haloMaterial);
+            halo.renderOrder = 1000;
+            halo.frustumCulled = false;
+            nightSkyGroup.add(halo);
+
+            meteorData.push({
+                trailSegments,
+                head,
+                halo,
+                travel,
+                start,
+                elapsed: 0,
+                duration: 1.8 + Math.random() * 0.8,
+                frontFadeDuration: 0.45,
+                shadowDuration: 3.2 + Math.random() * 1.8,
+                length: 42 + Math.random() * 24
+            });
+        }
+
+        function updateMeteorShowers(deltaTime) {
+            if (!nightSkyEnabled || !nightSkyGroup) return;
+
+            const now = performance.now();
+            if (now >= meteorNextSpawnAt) {
+                spawnMeteor();
+                meteorNextSpawnAt = now + 7000 + Math.random() * 11000;
+            }
+
+            for (let i = meteorData.length - 1; i >= 0; i--) {
+                const meteor = meteorData[i];
+                meteor.elapsed += deltaTime;
+                const activeProgress = Math.min(meteor.elapsed / meteor.duration, 1);
+                const frontFadeProgress = THREE.MathUtils.clamp(
+                    (meteor.elapsed - meteor.duration) / meteor.frontFadeDuration,
+                    0,
+                    1
+                );
+                const shadowProgress = THREE.MathUtils.clamp(
+                    (meteor.elapsed - meteor.duration - meteor.frontFadeDuration) / meteor.shadowDuration,
+                    0,
+                    1
+                );
+                const headProgress = Math.min(activeProgress / 0.68, 1);
+                const headPosition = meteor.start.clone().addScaledVector(meteor.travel, headProgress * meteor.length * 2.2);
+                const fadeIn = Math.min(activeProgress / 0.18, 1);
+                const activeOpacity = fadeIn * (1 - frontFadeProgress);
+                const shadowOpacity = (1 - shadowProgress) * 0.14;
+                const zoomScale = THREE.MathUtils.clamp(state.fov / currentVisualFov, 1, 12);
+                const hotColor = new THREE.Color(0xffffff);
+                const coolColor = new THREE.Color(0xff6a32);
+                for (let segmentIndex = 0; segmentIndex < meteor.trailSegments.length; segmentIndex++) {
+                    const segment = meteor.trailSegments[segmentIndex];
+                    const segmentStart = segmentIndex / meteor.trailSegments.length;
+                    const segmentEnd = (segmentIndex + 1) / meteor.trailSegments.length;
+                    const startPosition = headPosition.clone().addScaledVector(meteor.travel, -segmentStart * meteor.length);
+                    const endPosition = headPosition.clone().addScaledVector(meteor.travel, -segmentEnd * meteor.length);
+                    const positions = segment.geometry.attributes.position.array;
+                    positions.set(startPosition.clone().lerp(endPosition, 0.5).toArray(), 0);
+                    segment.geometry.attributes.position.needsUpdate = true;
+                    const tailRatio = THREE.MathUtils.clamp((segmentStart - 0.18) / 0.82, 0, 1);
+                    const tailDissolve = tailRatio === 0
+                        ? 1
+                        : 1 - THREE.MathUtils.smoothstep(activeProgress + tailRatio * 0.35, 0.38, 0.96);
+                    const tailBrightness = Math.exp(-segmentStart * 4.2);
+                    const liveOpacity = activeOpacity * tailDissolve * tailBrightness * 0.58;
+                    segment.material.opacity = liveOpacity + shadowOpacity * tailBrightness * 0.65;
+                    segment.material.size = (1.4 + (1 - segmentStart) * 1.8) * zoomScale;
+                    segment.material.color.copy(hotColor).lerp(coolColor, segmentStart * 0.75);
+                }
+                meteor.head.geometry.attributes.position.array.set(headPosition.toArray());
+                meteor.head.geometry.attributes.position.needsUpdate = true;
+                meteor.halo.geometry.attributes.position.array.set(headPosition.toArray());
+                meteor.halo.geometry.attributes.position.needsUpdate = true;
+
+                const burnPulse = 1 + Math.sin(meteor.elapsed * 34) * 0.12;
+                meteor.head.material.size = 2.8 * zoomScale * burnPulse * (1 + Math.max(0, 0.7 - activeProgress) * 0.25);
+                meteor.head.material.color.setRGB(1, 0.55 + (1 - activeProgress) * 0.45, 0.28 + (1 - activeProgress) * 0.72);
+                meteor.head.material.opacity = activeOpacity * (0.85 + burnPulse * 0.15);
+                meteor.halo.material.size = 6 * zoomScale * (1 + burnPulse * 0.06);
+                meteor.halo.material.opacity = activeOpacity * 0.14 + shadowOpacity * 0.62;
+
+                if (meteor.elapsed >= meteor.duration + meteor.frontFadeDuration + meteor.shadowDuration) {
+                    for (const segment of meteor.trailSegments) {
+                        nightSkyGroup.remove(segment);
+                        segment.geometry.dispose();
+                        segment.material.map.dispose();
+                        segment.material.dispose();
+                    }
+                    nightSkyGroup.remove(meteor.head);
+                    nightSkyGroup.remove(meteor.halo);
+                    meteor.head.geometry.dispose();
+                    meteor.head.material.map.dispose();
+                    meteor.head.material.dispose();
+                    meteor.halo.geometry.dispose();
+                    meteor.halo.material.map.dispose();
+                    meteor.halo.material.dispose();
+                    meteorData.splice(i, 1);
+                }
+            }
+        }
+
+        function clearMeteors() {
+            if (!nightSkyGroup) return;
+            for (const meteor of meteorData) {
+                for (const segment of meteor.trailSegments) {
+                    nightSkyGroup.remove(segment);
+                    segment.geometry.dispose();
+                    segment.material.map.dispose();
+                    segment.material.dispose();
+                }
+                nightSkyGroup.remove(meteor.head);
+                nightSkyGroup.remove(meteor.halo);
+                meteor.head.geometry.dispose();
+                meteor.head.material.map.dispose();
+                meteor.head.material.dispose();
+                meteor.halo.geometry.dispose();
+                meteor.halo.material.map.dispose();
+                meteor.halo.material.dispose();
+            }
+            meteorData = [];
+        }
+
         function updateStarTwinkle() {
             if (!nightSkyEnabled || !nightSkyGroup || starTwinkleData.length === 0) return;
 
@@ -771,11 +1049,11 @@
                 if (data.isTwinkling) {
                     // 正弦波闪烁，周期约 2 秒
                     const twinkle = (Math.sin(time * 2 + data.phase) + 1) / 2;
-                    const brightness = data.baseColor * (0.3 + twinkle * 0.7);
+                    const brightness = 0.3 + twinkle * 0.7;
                     
-                    colors[data.index * 3] = brightness;
-                    colors[data.index * 3 + 1] = brightness;
-                    colors[data.index * 3 + 2] = brightness;
+                    colors[data.index * 3] = data.baseColorR * brightness;
+                    colors[data.index * 3 + 1] = data.baseColorG * brightness;
+                    colors[data.index * 3 + 2] = data.baseColorB * brightness;
                 }
             }
 
@@ -785,6 +1063,129 @@
             const zoomRatio = state.fov / currentVisualFov;
             const baseSize = stars.userData.baseSize || 8.0;
             stars.material.size = baseSize * zoomRatio;
+        }
+
+        function createNebulaMaterial() {
+            return new THREE.ShaderMaterial({
+                transparent: true,
+                depthTest: true,
+                depthWrite: false,
+                side: THREE.BackSide,
+                blending: THREE.NormalBlending,
+                uniforms: {},
+                vertexShader: `
+                    varying vec3 vDirection;
+                    void main() {
+                        vDirection = normalize(position);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vDirection;
+
+                    float hash(vec3 p) {
+                        p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+                        p *= 17.0;
+                        return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+                    }
+
+                    float noise(vec3 p) {
+                        vec3 cell = floor(p);
+                        vec3 local = fract(p);
+                        local = local * local * (3.0 - 2.0 * local);
+                        float n000 = hash(cell);
+                        float n100 = hash(cell + vec3(1.0, 0.0, 0.0));
+                        float n010 = hash(cell + vec3(0.0, 1.0, 0.0));
+                        float n110 = hash(cell + vec3(1.0, 1.0, 0.0));
+                        float n001 = hash(cell + vec3(0.0, 0.0, 1.0));
+                        float n101 = hash(cell + vec3(1.0, 0.0, 1.0));
+                        float n011 = hash(cell + vec3(0.0, 1.0, 1.0));
+                        float n111 = hash(cell + vec3(1.0, 1.0, 1.0));
+                        float x00 = mix(n000, n100, local.x);
+                        float x10 = mix(n010, n110, local.x);
+                        float x01 = mix(n001, n101, local.x);
+                        float x11 = mix(n011, n111, local.x);
+                        return mix(mix(x00, x10, local.y), mix(x01, x11, local.y), local.z);
+                    }
+
+                    float fbm(vec3 p) {
+                        float value = 0.0;
+                        float amplitude = 0.5;
+                        for (int i = 0; i < 6; i++) {
+                            value += noise(p) * amplitude;
+                            p = p * 2.03 + vec3(4.7, 1.9, 7.3);
+                            amplitude *= 0.5;
+                        }
+                        return value;
+                    }
+
+                    float ridgedFbm(vec3 p) {
+                        float value = 0.0;
+                        float amplitude = 0.5;
+                        for (int i = 0; i < 5; i++) {
+                            float layer = 1.0 - abs(noise(p) * 2.0 - 1.0);
+                            value += layer * amplitude;
+                            p = p * 2.08 + vec3(2.4, 6.1, 3.7);
+                            amplitude *= 0.5;
+                        }
+                        return value;
+                    }
+
+                    void main() {
+                        vec3 direction = normalize(vDirection);
+                        float broadCloud = fbm(direction * 2.15);
+                        float cloudDetail = fbm(direction * 7.5 + vec3(8.0, 2.0, 5.0));
+                        float fineWisps = ridgedFbm(direction * 15.0 + vec3(2.0, 7.0, 4.0));
+                        float dustNoise = fbm(direction * 5.2 + vec3(9.0, 1.0, 6.0));
+                        float microDust = ridgedFbm(direction * 28.0 + vec3(6.0, 3.0, 11.0));
+                        float voidNoise = fbm(direction * 3.6 + vec3(13.0, 4.0, 8.0));
+                        float voidMask = smoothstep(0.22, 0.52, voidNoise);
+                        float cloudMass = smoothstep(0.36, 0.72, broadCloud) * voidMask;
+                        float cloudEdge = smoothstep(0.28, 0.62, broadCloud) * voidMask;
+                        float gasWisps = smoothstep(0.3, 0.78, cloudDetail) * cloudMass;
+                        float filaments = smoothstep(0.48, 0.82, fineWisps) * cloudMass;
+                        float brightCore = smoothstep(0.65, 0.88, cloudDetail)
+                            * smoothstep(0.62, 0.88, broadCloud)
+                            * voidMask;
+                        float dustLanes = smoothstep(0.46, 0.7, dustNoise) * cloudMass;
+                        float darkNebula = smoothstep(0.48, 0.72, dustNoise)
+                            * smoothstep(0.26, 0.72, broadCloud)
+                            * (1.0 - smoothstep(0.62, 0.9, cloudDetail));
+                        float warmDust = smoothstep(0.56, 0.86, noise(direction * 3.1 + vec3(3.0, 9.0, 1.0)));
+                        float magentaField = smoothstep(0.38, 0.78, fbm(direction * 4.4 + vec3(5.0, 3.0, 12.0)));
+
+                        vec3 colorfulBlack = vec3(0.004, 0.006, 0.018);
+                        vec3 darkPurple = vec3(0.022, 0.004, 0.045);
+                        vec3 deepCyan = vec3(0.003, 0.022, 0.038);
+                        vec3 deepBlue = vec3(0.006, 0.032, 0.105);
+                        vec3 blueGas = vec3(0.012, 0.075, 0.19);
+                        vec3 cyanGas = vec3(0.025, 0.12, 0.2);
+                        vec3 violetGas = vec3(0.075, 0.014, 0.18);
+                        vec3 magentaGas = vec3(0.18, 0.018, 0.105);
+                        vec3 warmNebula = vec3(0.28, 0.09, 0.018);
+                        vec3 electricBlue = vec3(0.12, 0.48, 1.0);
+                        vec3 hotMagenta = vec3(0.72, 0.08, 0.56);
+                        vec3 coreWhite = vec3(0.86, 0.92, 1.0);
+                        vec3 color = mix(colorfulBlack, deepCyan, cloudEdge * 0.28);
+                        color = mix(color, darkPurple, warmDust * cloudEdge * 0.26);
+                        color = mix(color, deepBlue, cloudEdge * 0.82);
+                        color = mix(color, blueGas, gasWisps * 0.7);
+                        color = mix(color, cyanGas, filaments * (0.26 + microDust * 0.14));
+                        color = mix(color, violetGas, cloudMass * magentaField * 0.34);
+                        color = mix(color, magentaGas, gasWisps * magentaField * 0.42);
+                        color = mix(color, warmNebula, brightCore * warmDust * 0.48);
+                        color = mix(color, electricBlue, brightCore * 0.54);
+                        color = mix(color, hotMagenta, brightCore * magentaField * 0.42);
+                        color = mix(color, coreWhite, pow(brightCore, 2.4) * 0.62);
+                        color *= 1.0 - dustLanes * 0.28;
+                        color = mix(color, darkPurple * 0.25, darkNebula * 0.82);
+                        float gasDensity = cloudMass * (0.22 + gasWisps * 0.64 + filaments * 0.38 + microDust * 0.12);
+                        gasDensity *= 1.0 - darkNebula * 0.68;
+                        float alpha = clamp(gasDensity + brightCore * 0.78 - dustLanes * 0.1, 0.0, 0.92);
+                        gl_FragColor = vec4(color, alpha);
+                    }
+                `
+            });
         }
 
         function createNightSkyEffects() {
@@ -806,6 +1207,13 @@
             );
             skySphere.renderOrder = 0;
             group.add(skySphere);
+
+            const nebulaSphere = new THREE.Mesh(
+                new THREE.SphereGeometry(598, 64, 32),
+                createNebulaMaterial()
+            );
+            nebulaSphere.renderOrder = 1;
+            group.add(nebulaSphere);
 
             // 创建星星点云
             const starCount = 10000;
@@ -839,9 +1247,15 @@
                     brightness = 0.12 + Math.random() * 0.18; // 15% 微弱
                 }
 
-                colors[i * 3] = brightness;
-                colors[i * 3 + 1] = brightness;
-                colors[i * 3 + 2] = brightness;
+                const colorRoll = Math.random();
+                const starColor = colorRoll < 0.12
+                    ? { r: 0.74, g: 0.87, b: 1.0 }
+                    : colorRoll < 0.24
+                        ? { r: 1.0, g: 0.86, b: 0.62 }
+                        : { r: 1.0, g: 1.0, b: 1.0 };
+                colors[i * 3] = brightness * starColor.r;
+                colors[i * 3 + 1] = brightness * starColor.g;
+                colors[i * 3 + 2] = brightness * starColor.b;
 
                 // 30% 的星星会闪烁
                 const shouldTwinkle = Math.random() < 0.3;
@@ -849,7 +1263,10 @@
                     index: i,
                     isTwinkling: shouldTwinkle,
                     phase: Math.random() * Math.PI * 2,
-                    baseColor: brightness
+                    baseColor: brightness,
+                    baseColorR: brightness * starColor.r,
+                    baseColorG: brightness * starColor.g,
+                    baseColorB: brightness * starColor.b
                 });
             }
 
@@ -885,32 +1302,41 @@
         function setNightSky(active) {
             nightSkyEnabled = active;
             if (nightSkyGroup) nightSkyGroup.visible = active;
+            if (active) {
+                meteorNextSpawnAt = performance.now() + 3000 + Math.random() * 5000;
+                lastMeteorUpdateTime = performance.now();
+            } else {
+                clearMeteors();
+            }
         }
 
                 function updateNightSkyState() {
             setNightSky(nightSkyForced);
         }
 
-        function buildGallery() {
+        async function buildGallery() {
             const loader = new THREE.TextureLoader();
             loader.setCrossOrigin('anonymous');
-            const floorTex = loader.load('https://threejs.org/examples/textures/hardwood2_diffuse.jpg');
+            const floorTex = await loader.loadAsync('https://threejs.org/examples/textures/hardwood2_diffuse.jpg');
             floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
             floorTex.repeat.set(8, 10);
             floorMaterial = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.65, metalness: 0.05, color: 0xf4f4f4 });
             const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w, ROOM.d), floorMaterial);
             floorMesh.rotation.x = -Math.PI / 2;
+            configureShadowObject(floorMesh, false, true);
             scene.add(floorMesh);
 
-            const wallTex = loader.load('https://lumierespace.qts.dpdns.org/Texture/Poliigon_ConcreteWorn_8690_BaseColor.jpg?v=' + Date.now());
+            const wallTex = await loader.loadAsync('https://lumierespace.qts.dpdns.org/Texture/Poliigon_ConcreteWorn_8690_BaseColor.jpg?v=' + Date.now());
             wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
             wallTex.repeat.set(4, 1);
             wallMaterial = new THREE.MeshStandardMaterial({ map: wallTex, color: 0xffffff, roughness: 0.8 });
-            const createW = (w, h, x, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMaterial); m.position.set(x, h/2, z); m.rotation.y = ry; scene.add(m); };
+            const createW = (w, h, x, z, ry) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMaterial); m.position.set(x, h/2, z); m.rotation.y = ry; configureShadowObject(m, true, true); scene.add(m); };
             createW(ROOM.w, ROOM.h, 0, -ROOM.d/2, 0); createW(ROOM.d, ROOM.h, ROOM.w/2, 0, -Math.PI/2); createW(ROOM.w, ROOM.h, 0, ROOM.d/2, Math.PI); createW(ROOM.d, ROOM.h, -ROOM.w/2, 0, Math.PI/2);
 
             ambientLight = new THREE.AmbientLight(0xffffff, state.ambientIntensity);
             scene.add(ambientLight);
+            hemisphereLight = new THREE.HemisphereLight(0xc8ddff, 0x241b16, 0.18);
+            scene.add(hemisphereLight);
 
             createNightSkyEffects();
             updateNightSkyState();
@@ -1061,20 +1487,44 @@
             src.start();
         }
 
-        function addCustomMarbleBench() {
+        async function addCustomMarbleBench() {
             const loader = new THREE.TextureLoader();
             loader.setCrossOrigin('anonymous');
             const marbleUrl = 'https://lumierespace.qts.dpdns.org/Texture/Poliigon_StoneQuartzite_8060_BaseColor.jpg';
-            const marbleTex = loader.load(marbleUrl + '?v=' + Date.now());
+            const marbleTex = await loader.loadAsync(marbleUrl + '?v=' + Date.now());
             marbleTex.wrapS = marbleTex.wrapT = THREE.RepeatWrapping; marbleTex.repeat.set(2, 1);
             marbleMaterial = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.1, metalness: 0.05 });
             bench = new THREE.Group();
             const seatHeight = 2.4, baseHeight = 0.6;
             const seat = new THREE.Mesh(new THREE.BoxGeometry(12, seatHeight, 5), marbleMaterial);
-            seat.position.y = baseHeight + (seatHeight / 2); bench.add(seat);
+            seat.position.y = baseHeight + (seatHeight / 2); configureShadowObject(seat, true, true); bench.add(seat);
             const base = new THREE.Mesh(new THREE.BoxGeometry(10, baseHeight, 4), marbleMaterial);
-            base.position.y = baseHeight / 2; bench.add(base);
+            base.position.y = baseHeight / 2; configureShadowObject(base, true, true); bench.add(base);
             scene.add(bench);
+        }
+
+        function configureShadowObject(object, castShadow, receiveShadow) {
+            object.traverse(child => {
+                if (!child.isMesh) return;
+                child.castShadow = castShadow;
+                child.receiveShadow = receiveShadow;
+            });
+        }
+
+        function configureShadowLight(light, mapSize = 2048) {
+            light.castShadow = true;
+            light.shadow.mapSize.set(mapSize, mapSize);
+            light.shadow.camera.near = 0.5;
+            light.shadow.camera.far = Math.min(light.distance || 100, 32);
+            light.shadow.bias = -0.000001;
+            light.shadow.normalBias = 0.001;
+            light.shadow.radius = 2;
+        }
+
+        function applyShadowSettings() {
+            if (renderer) renderer.shadowMap.enabled = state.realtimeShadows;
+            if (flashlight) flashlight.castShadow = state.realtimeShadows;
+            spotLights.forEach(light => { light.castShadow = state.realtimeShadows; });
         }
 
         function getArtworkSizeMultiplier(item) {
@@ -1401,11 +1851,12 @@
                 new THREE.BoxGeometry(signWidth, signHeight, signDepth * 0.65),
                 [signBackMaterial, signBackMaterial, signBackMaterial, signBackMaterial, frontMaterial, signBackMaterial]
             );
-            signBody.position.z = -signDepth * 0.65;
+            signBody.position.z = -signDepth * 0.65 + 0.002;
             signBody.renderOrder = 998;
+            configureShadowObject(signBody, true, false);
             signGroup.add(signBody);
 
-            signGroup.position.set(width / 2 + signWidth / 2 + 0.55, -height / 2 + signHeight / 2 + 0.16, -0.2);
+            signGroup.position.set(width / 2 + signWidth / 2 + 0.55, -height / 2 + signHeight / 2 + 0.16, -0.122);
             signGroup.rotation.set(0, 0, 0);
             signGroup.updateMatrixWorld(true);
             signGroup.renderOrder = 997;
@@ -1613,6 +2064,7 @@
             overlay.style.display = 'flex';
             requestAnimationFrame(() => { overlay.style.opacity = '1'; });
 
+            await galleryMaterialsReady;
             floors = await curateFloors(items);
 
             document.getElementById('ui-layer').style.opacity = '0';
@@ -2095,6 +2547,14 @@
             document.getElementById('notice-overlay').style.display = 'none';
         }
 
+        function showRealtimeShadowsConfirmation() {
+            document.getElementById('realtime-shadows-confirm-overlay').style.display = 'flex';
+        }
+
+        function closeRealtimeShadowsConfirmation() {
+            document.getElementById('realtime-shadows-confirm-overlay').style.display = 'none';
+        }
+
         function applyLanguage(lang) {
             if (!translations[lang]) return;
             currentLang = lang;
@@ -2116,6 +2576,7 @@
             document.querySelectorAll('#lang-switcher .lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.lang === lang);
             });
+            updateNowPlayingText();
 
             // 如果公告面板開啟，即時更新公告
             if (document.getElementById('notice-overlay').style.display === 'flex') {
@@ -2143,14 +2604,41 @@
             moveBackward = false;
             moveLeft = false;
             moveRight = false;
+            moveUp = false;
+            moveDown = false;
             moveVelocity.set(0, 0);
+        }
+
+        function setFlying(active) {
+            if (active === isFlying) return;
+
+            isFlying = active;
+            velocityY = 0;
+            if (active) {
+                canJump = false;
+                isSitting = false;
+                isStandingUp = false;
+            }
+
+            if (!active) {
+                const borderW = ROOM.w / 2 - 5;
+                const borderD = ROOM.d / 2 - 5;
+                const isInsideGallery = Math.abs(player.position.x) <= borderW && Math.abs(player.position.z) <= borderD;
+
+                if (!isInsideGallery) {
+                    player.position.set(0, 5.5, 50);
+                    canJump = true;
+                } else {
+                    canJump = false;
+                }
+            }
         }
 
         function updateLevelIndicator() {
             const indicator = document.getElementById('level-indicator');
             if (!indicator) return;
 
-            const currentLevel = Number.isInteger(currentFloorIdx) ? currentFloorIdx : 0;
+            const currentLevel = Number.isInteger(currentFloorIdx) ? currentFloorIdx + 1 : 1;
             const totalLevels = Math.max(floors.length || 0, 1);
             const template = (translations[currentLang] || translations.zh).levelIndicator || 'LEVEL {current} / {total}';
             indicator.innerText = template.replace('{current}', currentLevel).replace('{total}', totalLevels);
@@ -2255,8 +2743,100 @@
             document.getElementById('command-input').focus();
         }
 
+        const commandSuggestions = ['/help', '/renew', '/reload', '/fly', '/nightsky', '/nightsky_a', '/hello', '/version', '/clear', '/test_title', '/test_wb', '/test_gpu'];
+
+        function hideCommandSuggestions() {
+            commandSuggestionCandidates = [];
+            commandSuggestionIndex = -1;
+            commandSuggestionInput = '';
+            commandSuggestionPrefix = '';
+            const suggestions = document.getElementById('command-suggestions');
+            if (suggestions) {
+                suggestions.replaceChildren();
+                suggestions.style.display = 'none';
+            }
+        }
+
+        function navigateCommandHistory(direction) {
+            if (commandHistory.length === 0) return false;
+
+            const input = document.getElementById('command-input');
+            if (commandHistoryIndex < 0) commandHistoryIndex = commandHistory.length;
+
+            if (direction < 0) {
+                commandHistoryIndex = Math.max(0, commandHistoryIndex - 1);
+                input.value = commandHistory[commandHistoryIndex];
+            } else if (commandHistoryIndex < commandHistory.length - 1) {
+                commandHistoryIndex += 1;
+                input.value = commandHistory[commandHistoryIndex];
+            } else {
+                commandHistoryIndex = commandHistory.length;
+                input.value = '/';
+            }
+
+            hideCommandSuggestions();
+            input.focus();
+            return true;
+        }
+
+        function getCommandSuggestionCandidates(inputValue) {
+            const input = inputValue.trimStart();
+            if (!input.startsWith('/')) return [];
+
+            if (input.startsWith('/fly ')) {
+                const argumentPrefix = input.slice(5).trimStart().toLowerCase();
+                return ['on', 'off'].filter(option => option.startsWith(argumentPrefix)).map(option => `/fly ${option}`);
+            }
+
+            if (input === '/fly') return [];
+            return commandSuggestions.filter(command => command.startsWith(input.toLowerCase()));
+        }
+
+        function renderCommandSuggestions() {
+            const suggestions = document.getElementById('command-suggestions');
+            if (!suggestions) return [];
+            suggestions.replaceChildren();
+
+            if (commandSuggestionCandidates.length === 0) {
+                suggestions.style.display = 'none';
+                return commandSuggestionCandidates;
+            }
+
+            commandSuggestionCandidates.forEach((candidate, index) => {
+                const item = document.createElement('div');
+                item.className = `command-suggestion${index === commandSuggestionIndex ? ' active' : ''}`;
+                item.textContent = candidate;
+                suggestions.appendChild(item);
+            });
+            suggestions.style.display = 'flex';
+            return commandSuggestionCandidates;
+        }
+
+        function cycleCommandSuggestions() {
+            const input = document.getElementById('command-input');
+            const isContinuingCycle = commandSuggestionCandidates.length > 0
+                && commandSuggestionCandidates.includes(input.value)
+                && commandSuggestionInput === commandSuggestionPrefix;
+            if (!isContinuingCycle) {
+                commandSuggestionPrefix = input.value;
+                commandSuggestionInput = input.value;
+                commandSuggestionCandidates = getCommandSuggestionCandidates(input.value);
+                commandSuggestionIndex = -1;
+            }
+
+            const candidates = commandSuggestionCandidates;
+            if (candidates.length === 0) return false;
+
+            commandSuggestionIndex = (commandSuggestionIndex + 1) % candidates.length;
+            input.value = candidates[commandSuggestionIndex];
+            renderCommandSuggestions();
+            input.focus();
+            return true;
+        }
+
         function closeCommandLine(closedByEscape = false) {
             isCommandLineOpen = false;
+            hideCommandSuggestions();
             document.getElementById('command-line-overlay').style.display = 'none';
             document.getElementById('command-input').blur();
             // 恢復樓層與設定按鈕狀態
@@ -2280,6 +2860,8 @@
             if (cmd === '/help') {
                 addCommandLog("=== 可用指令說明清單 ===", "Help");
                 addCommandLog("/help        - 顯示此指令說明清單", "Help");
+                addCommandLog("/fly on      - 開啟飛行模式，穿過牆壁與碰撞箱", "Help");
+                addCommandLog("/fly off     - 關閉飛行模式並下落或返回起點", "Help");
                 addCommandLog("/renew       - 重新連接展場材質、音樂並重載展品", "Help");
                 addCommandLog("/reload      - 重新讀取目前定義檔與圖片並重佈展", "Help");
                 addCommandLog("/nightsky    - 開啟或關閉夜晚星空彩蛋效果", "Help");
@@ -2349,6 +2931,14 @@
                 document.getElementById('command-input').focus();
             } else if (cmd === '/reload') {
                 reloadCurrentGallery();
+            } else if (cmd === '/fly') {
+                addCommandLog("指令缺少必要參數：請輸入 /fly on 或 /fly off。", "error");
+            } else if (cmd === '/fly on') {
+                setFlying(true);
+                addCommandLog("飛行模式已開啟。空白鍵上升，Shift 鍵下降。", "Fly");
+            } else if (cmd === '/fly off') {
+                setFlying(false);
+                addCommandLog("飛行模式已關閉。", "Fly");
             } else if (cmd === '/nightsky') {
                 nightSkyForced = !nightSkyForced;
                 updateNightSkyState();
@@ -2358,7 +2948,7 @@
                 nightSkyForced = true;
                 updateNightSkyState();
                 saveSettings();
-                addCommandLog("星空效果已設為永久顯示。再次輸入 /nightsky_a 可關閉。", "NightSky");
+                addCommandLog("星空效果已設為永久顯示。再次輸入 /nightsky 可關閉。", "NightSky");
             } else if (cmd === '/test_title') {
                 document.getElementById('f-title').innerText = "Hello World!";
                 document.getElementById('f-subtitle').innerText = "Testing Command";
@@ -2386,7 +2976,7 @@
                 ⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉.
                 `, 'Hello');
             } else if (cmd === '/version') {
-                addCommandLog(`Version: v1.14.5`, 'Version');
+                addCommandLog(`Version: v1.15`, 'Version');
             } else if (cmd === '/test_wb') {
                 const uaStr = navigator.userAgent;
                 let bName = "Unknown", bVer = "Unknown";
@@ -2469,8 +3059,11 @@
             requestAnimationFrame(() => { overlay.style.opacity = '1'; });
             if (isDetailOpen) closeDetail();
 
-            // 等待遮罩動畫進行到足夠暗，才開始清理與更換畫作
-            await new Promise(r => setTimeout(r, 1500));
+            // 只有場景材質與當前樓層畫作都完成後，才允許顯示展場
+            await galleryMaterialsReady;
+
+            // 短暫等待遮罩變暗，實際完成時間由畫作與材質載入決定
+            await new Promise(r => setTimeout(r, 350));
 
             mediaObjects.forEach(obj => { if(obj.video) { obj.video.pause(); obj.video.src=""; obj.video.load(); obj.video.remove(); } if(obj.mlSign && obj.mlSign.parent) obj.mlSign.parent.remove(obj.mlSign); scene.remove(obj.parent); });
             spotLights.forEach(l => { scene.remove(l.target); scene.remove(l); });
@@ -2478,6 +3071,7 @@
             
             // 為展場中央的長椅增加頂部射燈
             const benchSpot = new THREE.SpotLight(0xffffff, state.spotIntensity, 40, 0.4, 0.5, 1.2);
+            configureShadowLight(benchSpot);
             benchSpot.position.set(0, ROOM.h - 2, 0);
             const benchTarget = new THREE.Object3D(); benchTarget.position.set(0, 0, 0);
             scene.add(benchTarget); benchSpot.target = benchTarget;
@@ -2496,10 +3090,10 @@
             let loadedCount = 0;
             const totalItems = floorData ? floorData.length : 0;
             const walls = [
-                { axis: 'x', start: -ROOM.w/2+10, dir: 1, pos: {x:0, z:-ROOM.d/2+0.3}, rot: 0 },        // 前面：從左(-X)往右(+X)
-                { axis: 'z', start: -ROOM.d/2+10, dir: 1, pos: {x:ROOM.w/2-0.3, z:0}, rot: -Math.PI/2 }, // 右面：從左(-Z)往右(+Z)
-                { axis: 'x', start: ROOM.w/2-10,  dir: -1, pos: {x:0, z:ROOM.d/2-0.3}, rot: Math.PI },   // 後面：從左(+X)往右(-X)
-                { axis: 'z', start: ROOM.d/2-10,  dir: -1, pos: {x:-ROOM.w/2+0.3, z:0}, rot: Math.PI/2 }  // 左面：從左(+Z)往右(-Z)
+                { axis: 'x', start: -ROOM.w/2+10, dir: 1, pos: {x:0, z:-ROOM.d/2+0.2}, rot: 0 },        // 前面：從左(-X)往右(+X)
+                { axis: 'z', start: -ROOM.d/2+10, dir: 1, pos: {x:ROOM.w/2-0.2, z:0}, rot: -Math.PI/2 }, // 右面：從左(-Z)往右(+Z)
+                { axis: 'x', start: ROOM.w/2-10,  dir: -1, pos: {x:0, z:ROOM.d/2-0.2}, rot: Math.PI },   // 後面：從左(+X)往右(-X)
+                { axis: 'z', start: ROOM.d/2-10,  dir: -1, pos: {x:-ROOM.w/2+0.2, z:0}, rot: Math.PI/2 }  // 左面：從左(+Z)往右(-Z)
             ];
             const wallLimits = [80, 100, 80, 100];
             const gap = 12;
@@ -2536,8 +3130,6 @@
                 let cursor = (wallLimits[i] - totalW) / 2; // 改為計算相對於牆面起始邊緣的偏移量
 
                 for (const item of items) {
-                    loadedCount++;
-                    updateLoadingProgress((loadedCount / totalItems) * 100);
                     let texture, vEl = null;
                     const w = item.w;
                     const h = item.h;
@@ -2553,7 +3145,7 @@
                         if (type.startsWith('video/')) {
                             vEl = document.createElement('video'); 
                             vEl.crossOrigin = "anonymous";
-                            vEl.src = url; vEl.muted = true; vEl.loop = true; vEl.playsInline = true; vEl.volume = 0;
+                            vEl.src = url; vEl.muted = state.audioMuted; vEl.loop = true; vEl.playsInline = true; vEl.volume = 0;
                             await new Promise((resolve, reject) => { 
                                 vEl.onloadedmetadata = resolve; 
                                 vEl.onerror = () => reject(new Error("Video playback error"));
@@ -2569,6 +3161,9 @@
                     } catch (err) {
                         throw new Error(`${translations[currentLang].errorFetchFailed}\n→ ${identifier}`);
                     }
+                    loadedCount++;
+                    updateLoadingProgress((loadedCount / totalItems) * 100);
+                    if (texture) texture.encoding = THREE.sRGBEncoding;
                     if (texture && item.aspectRatio) {
                         const mediaAspect = item.mediaAspect || item.displayAspect;
                         let repeatX = 1;
@@ -2599,16 +3194,22 @@
                         artGroup.rotation.z = THREE.MathUtils.degToRad(rotDegrees);
                     }
 
-                    const frame = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, h+0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0x030303, metalness: 0.1, roughness: 0.5 }));
+                    const frame = new THREE.Mesh(new THREE.BoxGeometry(w+0.6, h+0.6, 0.4), new THREE.MeshStandardMaterial({ color: 0x030303, metalness: 0.0, roughness: 0.8 }));
+                    frame.position.z = 0.025;
+                    configureShadowObject(frame, true, false);
                     artGroup.add(frame);
                     const pbr = getArtworkPBR(dataObj);
                     const canvas = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({
                         map: texture,
+                        color: 0xffffff,
                         roughness: pbr.roughness,
                         metalness: pbr.metalness,
-                        envMapIntensity: pbr.envMapIntensity
+                        envMapIntensity: pbr.envMapIntensity,
+                        emissive: 0x000000,
+                        emissiveIntensity: 0,
+                        toneMapped: true
                     }));
-                    canvas.position.z = 0.22; artGroup.add(canvas); selectableArt.push(canvas); 
+                    canvas.position.z = 0.245; configureShadowObject(canvas, false, false); artGroup.add(canvas); selectableArt.push(canvas); 
                     canvas.userData.artData = item; // 將作品數據存入 3D 物件中
                     const mlSign = createArtworkMLSign(dataObj, artGroup, w, h);
                     const finalPos = wall.start + (cursor + w/2) * wall.dir; // 根據牆面方向計算最終世界座標
@@ -2626,11 +3227,8 @@
             if(resetPos) player.position.set(0, 5.5, 50);
             applySpotSettings();
             
-            // 增加停留時間讓進度條跑完，並讓視覺過渡更自然，避免畫面閃爍
-            await new Promise(r => setTimeout(r, 1500)); 
-
             document.getElementById('loading-overlay').style.opacity = '0'; 
-            await new Promise(r => setTimeout(r, 1800)); // 真正等待動畫結束
+            await new Promise(r => setTimeout(r, 350)); // 等待短淡出動畫結束
             
             document.getElementById('loading-overlay').style.display = 'none'; 
             isLoading = false; 
@@ -2643,12 +3241,13 @@
 
         function addSpotlight(targetGroup, w, h, rotation) {
             const light = new THREE.SpotLight(0xffffff, state.spotIntensity, 45, state.spotAngle, 0.8, 1.2);
+            configureShadowLight(light);
             light.position.set(targetGroup.position.x + Math.sin(rotation)*7, targetGroup.position.y + 8, targetGroup.position.z + Math.cos(rotation)*7);
             const target = new THREE.Object3D(); target.position.copy(targetGroup.position);
             scene.add(target); light.target = target; scene.add(light); spotLights.push(light);
         }
 
-        function applySpotSettings() { spotLights.forEach(l => { l.intensity = state.spotIntensity; l.angle = state.spotAngle; l.visible = state.spotVisible; }); }
+        function applySpotSettings() { spotLights.forEach(l => { l.intensity = state.spotIntensity; l.angle = state.spotAngle; l.visible = state.spotVisible; }); applyShadowSettings(); }
         function formatTime(s) { if(!s || isNaN(s)) return "00:00"; const min = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
 
         function updateLoadingProgress(pct) {
@@ -2672,6 +3271,13 @@
         function applyMuteState() {
             if (ambienceGain) ambienceGain.gain.value = state.audioMuted ? 0 : state.ambienceVolume;
             if (musicGain) musicGain.gain.value = state.audioMuted ? 0 : state.musicVolume;
+            if (mediaObjects) {
+                for (const obj of mediaObjects) {
+                    if (obj.video) {
+                        obj.video.muted = state.audioMuted;
+                    }
+                }
+            }
         }
 
         function updateUIFromState() {
@@ -2683,13 +3289,16 @@
             document.getElementById('music-slider').value = state.musicVolume;
             document.getElementById('video-slider').value = state.videoVolume;
             document.getElementById('fov-slider').value = state.fov;
+            document.getElementById('view-height-slider').value = state.viewHeight;
             document.getElementById('ambient-slider').value = state.ambientIntensity;
             document.getElementById('spot-slider').value = state.spotIntensity;
             document.getElementById('spot-angle-slider').value = state.spotAngle;
 
             // Update UI checkboxes
             document.getElementById('spot-toggle').checked = state.spotVisible;
+            document.getElementById('realtime-shadows-toggle').checked = state.realtimeShadows;
             document.getElementById('reticle-toggle').checked = state.reticleVisible;
+            document.getElementById('motionblur-toggle').checked = state.motionBlurEnabled;
             document.getElementById('fps-toggle').checked = state.fpsVisible;
             document.getElementById('mute-toggle').checked = state.audioMuted;
             document.getElementById('flashlight-toggle').checked = state.flashlightOn;
@@ -2707,7 +3316,9 @@
 
             // Apply the visual/engine changes
             ambientLight.intensity = state.ambientIntensity;
+            if (hemisphereLight) hemisphereLight.intensity = 0.18 + state.ambientIntensity * 0.18;
             applySpotSettings();
+            applyShadowSettings();
             if(ambienceGain) ambienceGain.gain.value = state.ambienceVolume;
             if(musicGain) musicGain.gain.value = state.musicVolume;
             document.getElementById('fps-counter').style.display = state.fpsVisible ? 'block' : 'none';
@@ -2727,7 +3338,103 @@
             if (isLoading || isPaused || isSettingsOpen || isHelpOpen || isDetailOpen) return;
         }
 
+        function isFolderDrag(event) {
+            return Array.from(event.dataTransfer?.items || []).some(item => item.kind === 'file');
+        }
+
+        function readDroppedEntry(entry, parentPath = '') {
+            if (entry.isFile) {
+                return new Promise(resolve => {
+                    entry.file(file => {
+                        Object.defineProperty(file, 'webkitRelativePath', { value: `${parentPath}${file.name}` });
+                        resolve([file]);
+                    }, () => resolve([]));
+                });
+            }
+
+            return new Promise(resolve => {
+                const reader = entry.createReader();
+                const files = [];
+                const readBatch = () => {
+                    reader.readEntries(async entries => {
+                        if (entries.length === 0) {
+                            resolve(files);
+                            return;
+                        }
+                        const nestedFiles = await Promise.all(entries.map(child => readDroppedEntry(child, `${parentPath}${entry.name}/`)));
+                        files.push(...nestedFiles.flat());
+                        readBatch();
+                    }, () => resolve(files));
+                };
+                readBatch();
+            });
+        }
+
+        async function handleFolderDrop(event) {
+            const entries = Array.from(event.dataTransfer?.items || [])
+                .map(item => item.webkitGetAsEntry?.())
+                .filter(entry => entry?.isDirectory);
+            if (entries.length === 0) {
+                const files = Array.from(event.dataTransfer?.files || []);
+                if (files.length > 0) await handleFiles({ target: { files } });
+                return;
+            }
+
+            const nestedFiles = await Promise.all(entries.map(entry => readDroppedEntry(entry)));
+            const files = nestedFiles.flat();
+            if (files.length > 0) await handleFiles({ target: { files } });
+        }
+
+        function setupFolderDrop() {
+            const uiLayer = document.getElementById('ui-layer');
+            const fileInputLabel = document.getElementById('file-input-label');
+            let dragDepth = 0;
+            const setDropTarget = active => {
+                fileInputLabel.classList.toggle('folder-drop-target', active);
+                if (active) fileInputLabel.style.setProperty('transform', 'scale(1.18)', 'important');
+                else fileInputLabel.style.removeProperty('transform');
+                fileInputLabel.textContent = active ? translations[currentLang].dropFolder : translations[currentLang].enterGallery;
+            };
+
+            uiLayer.addEventListener('dragenter', event => {
+                if (!isFolderDrag(event)) return;
+                event.preventDefault();
+                dragDepth++;
+                setDropTarget(true);
+            });
+            uiLayer.addEventListener('dragover', event => {
+                if (!isFolderDrag(event)) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'copy';
+                setDropTarget(true);
+            });
+            uiLayer.addEventListener('dragleave', event => {
+                if (!uiLayer.contains(event.relatedTarget)) {
+                    dragDepth = 0;
+                    setDropTarget(false);
+                }
+            });
+            uiLayer.addEventListener('drop', async event => {
+                if (!isFolderDrag(event)) return;
+                event.preventDefault();
+                dragDepth = 0;
+                setDropTarget(false);
+                await handleFolderDrop(event);
+            });
+            window.addEventListener('dragover', event => {
+                if (uiLayer.style.display !== 'none') event.preventDefault();
+            });
+            window.addEventListener('drop', event => {
+                if (uiLayer.style.display !== 'none') event.preventDefault();
+            });
+        }
+
         function setupInteractiveControls() {
+            setupFolderDrop();
+            document.getElementById('command-input').addEventListener('input', hideCommandSuggestions);
+            document.getElementById('command-input').addEventListener('input', () => {
+                commandHistoryIndex = commandHistory.length;
+            });
             const settingsTriggerEl = document.getElementById('settings-trigger');
             let lastMousePos = { x: 0, y: 0 };
             document.addEventListener('mousemove', e => {
@@ -2828,16 +3535,40 @@
             document.getElementById('music-slider').oninput = (e) => { state.musicVolume = parseFloat(e.target.value); if (musicGain) updateMusicGain(); saveSettings(); };
             document.getElementById('video-slider').oninput = (e) => { state.videoVolume = parseFloat(e.target.value); saveSettings(); };
             document.getElementById('fov-slider').oninput = (e) => { state.fov = parseFloat(e.target.value); saveSettings(); };
-            document.getElementById('ambient-slider').oninput = (e) => { state.ambientIntensity = parseFloat(e.target.value); ambientLight.intensity = state.ambientIntensity; saveSettings(); };
+            document.getElementById('view-height-slider').oninput = (e) => { state.viewHeight = parseFloat(e.target.value); saveSettings(); };
+            document.getElementById('ambient-slider').oninput = (e) => { state.ambientIntensity = parseFloat(e.target.value); ambientLight.intensity = state.ambientIntensity; if (hemisphereLight) hemisphereLight.intensity = 0.18 + state.ambientIntensity * 0.18; saveSettings(); };
             document.getElementById('spot-slider').oninput = (e) => { state.spotIntensity = parseFloat(e.target.value); applySpotSettings(); saveSettings(); };
             document.getElementById('spot-angle-slider').oninput = (e) => { state.spotAngle = parseFloat(e.target.value); applySpotSettings(); saveSettings(); };
             document.getElementById('spot-toggle').onchange = (e) => { state.spotVisible = e.target.checked; applySpotSettings(); saveSettings(); };
+            document.getElementById('realtime-shadows-toggle').onchange = (e) => {
+                if (e.target.checked) {
+                    e.target.checked = false;
+                    showRealtimeShadowsConfirmation();
+                    return;
+                }
+                state.realtimeShadows = false;
+                applyShadowSettings();
+                saveSettings();
+            };
+            document.getElementById('realtime-shadows-confirm-btn').onclick = () => {
+                state.realtimeShadows = true;
+                document.getElementById('realtime-shadows-toggle').checked = true;
+                applyShadowSettings();
+                saveSettings();
+                closeRealtimeShadowsConfirmation();
+            };
+            document.getElementById('realtime-shadows-cancel-btn').onclick = () => {
+                state.realtimeShadows = false;
+                document.getElementById('realtime-shadows-toggle').checked = false;
+                closeRealtimeShadowsConfirmation();
+            };
             document.getElementById('mute-toggle').onchange = (e) => {
                 state.audioMuted = e.target.checked;
                 applyMuteState();
                 saveSettings();
             };
             document.getElementById('reticle-toggle').onchange = (e) => { state.reticleVisible = e.target.checked; saveSettings(); };
+            document.getElementById('motionblur-toggle').onchange = (e) => { state.motionBlurEnabled = e.target.checked; saveSettings(); };
             document.getElementById('fps-toggle').onchange = (e) => { state.fpsVisible = e.target.checked; document.getElementById('fps-counter').style.display = state.fpsVisible ? 'block' : 'none'; saveSettings(); };
             document.getElementById('flashlight-toggle').onchange = (e) => { state.flashlightOn = e.target.checked; flashlight.visible = state.flashlightOn; saveSettings(); };
             document.getElementById('reset-settings').onclick = resetSettingsToDefault;
@@ -2929,8 +3660,10 @@
                             joyY = (Math.sin(angle) * dist) / 80;
                             joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
                         } else if (isTouching && !isPaused && !isDetailOpen) {
-                            const mX = t.clientX - touchX;
-                            const mY = t.clientY - touchY;
+                            let mX = t.clientX - touchX;
+                            let mY = t.clientY - touchY;
+                            mX = Math.max(-80, Math.min(80, mX));
+                            mY = Math.max(-80, Math.min(80, mY));
                             player.rotation.y -= mX * 0.004;
                             pitch.rotation.x -= mY * 0.004;
                             pitch.rotation.x = Math.max(-1.5, Math.min(1.5, pitch.rotation.x));
@@ -2982,11 +3715,23 @@
                     document.getElementById('command-line-overlay').style.display = 'flex';
                     const input = document.getElementById('command-input');
                     input.value = '/';
+                    commandHistoryIndex = commandHistory.length;
+                    hideCommandSuggestions();
                     setTimeout(() => input.focus(), 10);
                     return;
                 }
 
                 if (isCommandLineOpen) {
+                    if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+                        e.preventDefault();
+                        navigateCommandHistory(e.code === 'ArrowUp' ? -1 : 1);
+                        return;
+                    }
+                    if (e.code === 'Tab') {
+                        e.preventDefault();
+                        cycleCommandSuggestions();
+                        return;
+                    }
                     // 僅允許 ESC 退出
                     if (e.code === 'Escape') {
                         e.preventDefault();
@@ -2994,10 +3739,23 @@
                         return;
                     }
                     // 按下 Enter 執行
-                    if (e.code === 'Enter') {
+                    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
                         e.preventDefault();
+                        const input = document.getElementById('command-input');
+                        const isSuggestionSelection = commandSuggestionCandidates.length > 0
+                            && commandSuggestionCandidates.includes(input.value);
+                        hideCommandSuggestions();
+                        if (isSuggestionSelection) {
+                            input.focus();
+                            return;
+                        }
+                        const command = input.value.trim();
+                        if (command && command !== '/') {
+                            commandHistory.push(command);
+                            commandHistoryIndex = commandHistory.length;
+                        }
                         // 不再檢查 commandErrorTimer，因為錯誤訊息不會阻擋輸入
-                        executeCommand(document.getElementById('command-input').value.trim());
+                        executeCommand(command);
                         return;
                     }
                     // 禁用其餘按鍵觸發遊戲邏輯
@@ -3044,10 +3802,22 @@
                     }
                 }
 
+                if (isFlying && e.code === 'Space') {
+                    e.preventDefault();
+                    moveUp = true;
+                    return;
+                }
+                if (isFlying && (e.code === 'ShiftLeft' || e.code === 'ShiftRight')) {
+                    e.preventDefault();
+                    moveDown = true;
+                    return;
+                }
+
                 if(e.code === 'Space' && !isStandingUp) {
                     e.preventDefault(); // 防止觸發網頁元素的預設行為
                     if (isSitting) {
                         isSitting = false; isStandingUp = true;
+                        stopMovement();
                     } else {
                         if (canBenchInteract) {
                             preSittingPos.copy(player.position); preSittingRotY = player.rotation.y;
@@ -3061,7 +3831,7 @@
                     if(e.code==='KeyW') moveForward=true; if(e.code==='KeyS') moveBackward=true;
                     if(e.code==='KeyA') moveLeft=true; if(e.code==='KeyD') moveRight=true;
                 }
-                if(e.code === 'KeyC') { isZooming = true; }
+                if(e.code === 'KeyC' && !isPaused && !isSettingsOpen && !isHelpOpen) { isZooming = true; }
                 
                 if(activeVideo && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
                     const btnId = (e.code === 'ArrowLeft') ? 'btn-prev' : 'btn-next';
@@ -3087,6 +3857,8 @@
             });
 
             window.addEventListener('keyup', e => {
+                if(e.code === 'Space') moveUp = false;
+                if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') moveDown = false;
                 if(e.code === 'KeyC') { isZooming = false; }
                 if(activeVideo && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
                     if(!isLongPressActive) {
@@ -3123,8 +3895,10 @@
                     if (Math.abs(e.movementX) > 500 || Math.abs(e.movementY) > 500) return;
 
                     const sensitivity = isZooming ? 0.0006 : 0.0018;
-                    player.rotation.y -= e.movementX * sensitivity;
-                    pitch.rotation.x -= e.movementY * sensitivity;
+                    const moveX = Math.max(-80, Math.min(80, e.movementX));
+                    const moveY = Math.max(-80, Math.min(80, e.movementY));
+                    player.rotation.y -= moveX * sensitivity;
+                    pitch.rotation.x -= moveY * sensitivity;
                     pitch.rotation.x = Math.max(-1.5, Math.min(1.5, pitch.rotation.x));
                 }
             });
@@ -3177,15 +3951,46 @@
 
             updateFPS(); // 總是調用 updateFPS 以確保 currentFPSValue 被更新
             updateStarTwinkle(); // 更新星星閃爍效果
+            const meteorNow = performance.now();
+            const meteorDelta = Math.min((meteorNow - lastMeteorUpdateTime) / 1000, 0.1);
+            lastMeteorUpdateTime = meteorNow;
+            updateMeteorShowers(meteorDelta);
             const prompt = document.getElementById('interaction-prompt');
             const reticle = document.getElementById('reticle');
+            if (isPaused || isSettingsOpen || isHelpOpen) isZooming = false;
             const targetFov = isZooming ? targetZoomFov : state.fov;
+
+            const viewHeight = THREE.MathUtils.clamp(Number(state.viewHeight) || 5.5, 3.5, 8.0);
+            const targetCameraY = viewHeight - 5.5;
+            pitch.position.y = (isSitting || isStandingUp)
+                ? THREE.MathUtils.lerp(pitch.position.y, targetCameraY, 0.1)
+                : targetCameraY;
+            camera.position.y = 0;
 
             // Q 鍵提示燈
             const qPrompt = document.getElementById('q-prompt');
 
             currentVisualFov += (targetFov - currentVisualFov) * 0.15;
             if (Math.abs(camera.fov - currentVisualFov) > 0.01) { camera.fov = currentVisualFov; camera.updateProjectionMatrix(); }
+
+            // 動態模糊效果：根據視角變化速率調整畫布 blur
+            if (state.motionBlurEnabled && renderer && renderer.domElement) {
+                const yawDelta = Math.abs(player.rotation.y - lastCameraYaw);
+                const pitchDelta = Math.abs(pitch.rotation.x - lastCameraPitch);
+                const targetBlur = Math.min(3, (yawDelta + pitchDelta) * 30);
+                motionBlurAmount += (targetBlur - motionBlurAmount) * 0.12;
+                renderer.domElement.style.filter = motionBlurAmount > 0.05 ? `blur(${motionBlurAmount.toFixed(2)}px)` : 'none';
+            } else if (renderer && renderer.domElement) {
+                motionBlurAmount += (0 - motionBlurAmount) * 0.12;
+                if (motionBlurAmount < 0.05) {
+                    motionBlurAmount = 0;
+                    renderer.domElement.style.filter = 'none';
+                } else {
+                    renderer.domElement.style.filter = `blur(${motionBlurAmount.toFixed(2)}px)`;
+                }
+            }
+            lastCameraYaw = player.rotation.y;
+            lastCameraPitch = pitch.rotation.x;
 
             if (!isLoading && !isPaused) {
                 if (isMobile && isTouching) {
@@ -3248,20 +4053,52 @@
                 reticle.classList.toggle('active', shouldBeVisible && (canInteractWithArt || (canBenchInteract && !isSitting)));
 
                 // 控制 Q 鍵提示燈的顯示與閃爍
-                qPrompt.style.opacity = (canInteractWithArt && !isDetailOpen && !isInteractionBlocked) ? '1' : '0';
-                qPrompt.classList.toggle('active', (canInteractWithArt && !isDetailOpen && !isInteractionBlocked));
+                const showQPrompt = canInteractWithArt && !isDetailOpen && !isInteractionBlocked;
+                qPrompt.style.opacity = showQPrompt ? '1' : '0';
+                qPrompt.classList.toggle('active', showQPrompt);
+                prompt.classList.toggle('stacked', showQPrompt);
 
-                if (isSitting && !isInteractionBlocked) {
-                    player.position.lerp(new THREE.Vector3(0, 5.8, 0), 0.08);
-                    prompt.style.display = 'block'; prompt.innerText = translations[currentLang].pressSpaceToStand;
+                if (isFlying) {
+                    prompt.style.opacity = '0';
+
+                    if ((document.pointerLockElement || isSettingsOpen) && !isPaused) {
+                        if (moveForward || moveBackward || moveLeft || moveRight || moveUp || moveDown) hideFloorTitle();
+
+                        const dir = new THREE.Vector3();
+                        camera.getWorldDirection(dir);
+                        dir.y = 0;
+                        dir.normalize();
+                        const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0));
+
+                        let targetX = 0;
+                        let targetZ = 0;
+                        if (moveForward) { targetX += dir.x * state.speed; targetZ += dir.z * state.speed; }
+                        if (moveBackward) { targetX -= dir.x * state.speed; targetZ -= dir.z * state.speed; }
+                        if (moveLeft) { targetX -= side.x * state.speed; targetZ -= side.z * state.speed; }
+                        if (moveRight) { targetX += side.x * state.speed; targetZ += side.z * state.speed; }
+
+                        const accel = (moveForward || moveBackward || moveLeft || moveRight) ? 0.08 : 0.15;
+                        moveVelocity.x = THREE.MathUtils.lerp(moveVelocity.x, targetX, accel);
+                        moveVelocity.y = THREE.MathUtils.lerp(moveVelocity.y, targetZ, accel);
+                        player.position.x += moveVelocity.x;
+                        player.position.z += moveVelocity.y;
+                        if (moveUp) player.position.y += state.speed;
+                        if (moveDown) player.position.y -= state.speed;
+                    }
+                } else if (isSitting && !isInteractionBlocked) {
+                    player.position.lerp(new THREE.Vector3(benchPos.x, BENCH_LEVEL_Y, benchPos.z), 0.08);
+                    prompt.style.opacity = '1';
+                    prompt.querySelector('.prompt-label').textContent = translations[currentLang].promptStand;
                 } else if (isStandingUp) {
                     player.position.lerp(preSittingPos, 0.1);
-                    player.rotation.y = lerpAngle(player.rotation.y, preSittingRotY, 0.1);
-                    if (player.position.distanceTo(preSittingPos) < 0.1) isStandingUp = false;
-                    prompt.style.display = 'none';
+                    if (player.position.distanceTo(preSittingPos) < 0.1) {
+                        player.position.copy(preSittingPos);
+                        isStandingUp = false;
+                    }
+                    prompt.style.opacity = '0';
                 } else {
-                    prompt.style.display = (canBenchInteract && !isInteractionBlocked) ? 'block' : 'none';
-                    prompt.innerText = translations[currentLang].pressSpaceToSit;
+                    prompt.style.opacity = (canBenchInteract && !isInteractionBlocked) ? '1' : '0';
+                    prompt.querySelector('.prompt-label').textContent = translations[currentLang].promptSit;
 
                     if ((document.pointerLockElement || isSettingsOpen) && !isPaused) {
                         if(moveForward || moveBackward || moveLeft || moveRight) hideFloorTitle();
@@ -3285,11 +4122,23 @@
                         const oldX = player.position.x, oldZ = player.position.z;
 
                         // 強化碰撞：如果高度足夠 (正在跳躍/飛越)，則允許進入椅子範圍
-                        const isOverBenchX = (Math.abs(nextX - benchPos.x) < benchBox.w / 2 && Math.abs(player.position.z - benchPos.z) < benchBox.d / 2);
-                        if (!isOverBenchX || player.position.y > 6.5) player.position.x = Math.max(-borderW, Math.min(borderW, nextX));
-                        
-                        const isOverBenchZ = (Math.abs(player.position.x - benchPos.x) < benchBox.w / 2 && Math.abs(nextZ - benchPos.z) < benchBox.d / 2);
-                        if (!isOverBenchZ || player.position.y > 6.5) player.position.z = Math.max(-borderD, Math.min(borderD, nextZ));
+                        const isAboveBench = player.position.y > 6.5;
+                        const nextPositionInBench = Math.abs(nextX - benchPos.x) < benchBox.w / 2 && Math.abs(nextZ - benchPos.z) < benchBox.d / 2;
+                        const nextXInBench = Math.abs(nextX - benchPos.x) < benchBox.w / 2 && Math.abs(oldZ - benchPos.z) < benchBox.d / 2;
+                        const nextZInBench = Math.abs(oldX - benchPos.x) < benchBox.w / 2 && Math.abs(nextZ - benchPos.z) < benchBox.d / 2;
+
+                        const canMoveX = isAboveBench || (!nextPositionInBench && !nextXInBench);
+                        const canMoveZ = isAboveBench || (!nextPositionInBench && !nextZInBench);
+                        if (canMoveX) {
+                            player.position.x = Math.max(-borderW, Math.min(borderW, nextX));
+                        } else {
+                            moveVelocity.x = 0;
+                        }
+                        if (canMoveZ) {
+                            player.position.z = Math.max(-borderD, Math.min(borderD, nextZ));
+                        } else {
+                            moveVelocity.y = 0;
+                        }
 
                         if (canJump) {
                             const dist = Math.sqrt((player.position.x - oldX)**2 + (player.position.z - oldZ)**2);
@@ -3301,9 +4150,9 @@
                     }
                     player.position.y += velocityY;
                     
-                    // 動態偵測當前位置的地面高度 (椅子上為 8.5, 地板為 5.5)
+                    // 動態偵測當前位置的地面高度 (椅子上為 BENCH_LEVEL_Y, 地板為 5.5)
                     const currentInBench = Math.abs(player.position.x - benchPos.x) < benchBox.w / 2 && Math.abs(player.position.z - benchPos.z) < benchBox.d / 2;
-                    const groundY = currentInBench ? 8.5 : 5.5;
+                    const groundY = currentInBench ? BENCH_LEVEL_Y : 5.5;
 
                     if (player.position.y > groundY) {
                         velocityY -= 0.008; 
@@ -3407,6 +4256,9 @@
                     const targetVol = (isTarget && !state.audioMuted) ? state.videoVolume : 0;
                     const v = obj.video;
 
+                    // 確保 muted 與全域靜音設定一致
+                    v.muted = state.audioMuted;
+
                     // 平滑過渡音量
                     if (v.volume !== targetVol) {
                         v.volume = THREE.MathUtils.lerp(v.volume, targetVol, 0.08);
@@ -3416,7 +4268,6 @@
                     // 控制播放行為：注視即播放，無視靜音設定
                     if (isTarget) {
                         if (v.paused) {
-                            v.muted = state.audioMuted; // 同步靜音狀態，確保符合瀏覽器自動播放政策
                             v.play().catch(() => {});
                         }
                     } else if (!isTarget && v.volume === 0 && !v.paused) {
